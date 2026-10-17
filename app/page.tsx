@@ -11,7 +11,7 @@ export default async function HomePage() {
       where: { published: true, featured: true },
       include: { images: { orderBy: { displayOrder: 'asc' }, take: 1 } },
       orderBy: { price: 'asc' },
-      take: 6,
+      take: 12,
     })
     .catch(() => []);
 
@@ -51,7 +51,7 @@ export default async function HomePage() {
           <div>
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Featured vehicles</h2>
             <p className="mt-2 text-sm text-ink-400">
-              Sample and catalog listings for demonstration. Confirm live inventory with our team.
+              Browse our Tesla catalog — Model 3, Model Y, Model S, Model X, Cybertruck, Semi, and Roadster.
             </p>
           </div>
           <Link href="/vehicles" className="hidden text-sm text-ink-300 hover:text-white sm:inline">
@@ -60,7 +60,7 @@ export default async function HomePage() {
         </div>
         {featured.length === 0 ? (
           <p className="mt-10 rounded-2xl border border-dashed border-white/15 p-10 text-center text-sm text-ink-400">
-            No vehicles in the database yet. Connect PostgreSQL, run migrations, and seed sample data.
+            No vehicles in the database yet. Run the seed SQL in Neon or npm run db:seed.
           </p>
         ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -82,22 +82,6 @@ export default async function HomePage() {
             ))}
           </div>
         )}
-      </section>
-
-      <section className="border-y border-white/10 bg-ink-900/40">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-          {[
-            { t: 'Transparent listings', d: 'Clear status labels: available, reserved, sold, or catalog-only.' },
-            { t: 'Detailed specifications', d: 'Performance, range standards, and trim details where verified.' },
-            { t: 'Secure accounts', d: 'Hashed passwords, server-side sessions, and role-based admin access.' },
-            { t: 'Reservation workflow', d: 'Server checks availability before any reservation is created.' },
-          ].map((item) => (
-            <div key={item.t}>
-              <h3 className="text-sm font-semibold">{item.t}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-400">{item.d}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
