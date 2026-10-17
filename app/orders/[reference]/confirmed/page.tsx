@@ -8,6 +8,16 @@ import { PaymentInstructions } from '@/components/PaymentInstructions';
 
 export const dynamic = 'force-dynamic';
 
+function cleanDescription(raw: string) {
+  return raw
+    .replace(/\bsample\s+catalog\s+listing\.?/gi, '')
+    .replace(/\bsample\s+listing\.?/gi, '')
+    .replace(/\bsample\s+inventory\.?/gi, '')
+    .replace(/\bcatalog\s+placeholder\.?/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 export default async function OrderConfirmedPage({
   params,
   searchParams,
@@ -48,8 +58,7 @@ export default async function OrderConfirmedPage({
     payConfig = DEFAULT_PAYMENT_METHODS;
   }
 
-  const preferredMethod =
-    searchParams?.method || planMeta.paymentMethod || null;
+  const preferredMethod = searchParams?.method || planMeta.paymentMethod || null;
 
   const price = Number(order.sellingPrice);
   const amountDue = planMeta.amountDue ?? price * 0.25;
@@ -58,6 +67,8 @@ export default async function OrderConfirmedPage({
     (order.vehicle.model === 'Cybertruck'
       ? '/images/cybertruck.png'
       : '/images/roadster.png');
+
+  const description = cleanDescription(order.vehicle.description);
 
   return (
     <div className="min-h-[80vh] bg-white text-ink-950">
@@ -82,7 +93,9 @@ export default async function OrderConfirmedPage({
               Your {order.vehicle.model}
             </p>
             <p className="mt-2 text-2xl font-semibold">{order.vehicle.trim}</p>
-            <p className="mt-2 text-sm text-ink-600">{order.vehicle.description.slice(0, 160)}</p>
+            {description ? (
+              <p className="mt-2 text-sm text-ink-600">{description.slice(0, 160)}</p>
+            ) : null}
             <Link
               href={`/vehicles/${order.vehicle.slug}`}
               className="mt-3 inline-block text-sm text-ink-950 underline"
