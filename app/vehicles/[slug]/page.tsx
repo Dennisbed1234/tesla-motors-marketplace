@@ -28,15 +28,16 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
 
   const session = await getSession();
   const price = Number(vehicle.price);
-  const canOrder = vehicle.inventoryStatus === 'AVAILABLE' && price > 0;
+  const canOrder =
+    price > 0 &&
+    vehicle.inventoryStatus !== 'SOLD' &&
+    vehicle.inventoryStatus !== 'UNAVAILABLE';
   const deposit25 = Math.round(price * 0.25 * 100) / 100;
 
   const specs: [string, string][] = [
     ['Model year', String(vehicle.modelYear)],
     ['Trim', vehicle.trim],
     ['Category', vehicle.category],
-    ['Condition', vehicle.condition],
-    ['Status', vehicle.inventoryStatus],
     ['Exterior', vehicle.exteriorColor || SPEC_UNAVAILABLE],
     ['Interior', vehicle.interiorColor || SPEC_UNAVAILABLE],
     ['Drive', vehicle.driveType || SPEC_UNAVAILABLE],
@@ -50,8 +51,10 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
     ['Charging', vehicle.charging || SPEC_UNAVAILABLE],
     ['Safety', vehicle.safetyRating || SPEC_UNAVAILABLE],
     ['Market', vehicle.market],
-    ['Min. down payment (25%)', price > 0 ? formatMoney(deposit25, vehicle.currency) : SPEC_UNAVAILABLE],
   ];
+  if (price > 0) {
+    specs.push(['Min. down payment (25%)', formatMoney(deposit25, vehicle.currency)]);
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -85,7 +88,7 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
         </div>
 
         <div>
-          <p className="text-sm text-ink-400">{vehicle.modelYear} · {vehicle.category}</p>
+          <p className="text-sm text-ink-400">{vehicle.modelYear}</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
             {vehicle.model}{' '}
             <span className="font-normal text-ink-300">{vehicle.trim}</span>
@@ -96,11 +99,13 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
             {price > 0 ? (
               <p className="text-3xl font-semibold">{formatMoney(price, vehicle.currency)}</p>
             ) : (
-              <p className="text-lg text-ink-400">Catalog reference — not priced for sale</p>
+              <p className="text-lg text-ink-400">Contact for pricing</p>
             )}
-            <span className="rounded-full border border-white/15 px-3 py-1 text-xs uppercase tracking-wide">
-              {vehicle.inventoryStatus.replace('_', ' ')}
-            </span>
+            {vehicle.inventoryStatus === 'AVAILABLE' && (
+              <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs uppercase tracking-wide text-emerald-200">
+                Available
+              </span>
+            )}
           </div>
           {price > 0 && (
             <p className="mt-2 text-sm text-ink-400">
@@ -118,9 +123,9 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
                 Log in to order
               </Link>
             ) : (
-              <button className="btn-primary opacity-50" disabled>
-                Not available to order
-              </button>
+              <Link href="/contact" className="btn-primary">
+                Contact us
+              </Link>
             )}
             {session && <FavoriteButton vehicleId={vehicle.id} />}
             <Link href="/contact" className="btn-secondary">
@@ -130,10 +135,6 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
               Compare
             </Link>
           </div>
-
-          {vehicle.disclaimer && (
-            <p className="mt-6 text-xs leading-relaxed text-amber-200/80">{vehicle.disclaimer}</p>
-          )}
         </div>
       </div>
 
