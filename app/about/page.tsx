@@ -4,12 +4,18 @@ export default function AboutPage() {
       <h1 className="text-3xl font-semibold">About us</h1>
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-ink-300">
         <p>
-          Tesla Motors Marketplace is a premium electric vehicle marketplace focused on Tesla models.
-          Browse, compare, reserve, and complete your purchase inquiry with our team.
+          Tesla Motors Marketplace is a premium electric vehicle marketplace and an affiliate partner
+          of Tesla, Inc. We specialize in helping customers discover, compare, reserve, and purchase
+          Tesla models with clear pricing and dedicated support.
         </p>
         <p>
-          Our goal is transparent listings, detailed specifications, secure customer accounts, and a
-          reservation workflow that checks inventory status before confirming interest.
+          Our New York team manages listings, orders, payment verification, and delivery coordination.
+          You get the Tesla product line you expect — with a guided buying experience through our
+          affiliate marketplace.
+        </p>
+        <p>
+          Nothing has changed about the vehicles themselves. Model names, performance figures, and
+          product families remain Tesla’s. We simply make ordering and support easier from one place.
         </p>
       </div>
 

@@ -17,7 +17,7 @@ export function slugify(text: string) {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .replace(/(^-|$)/g, '');
 }
 
 export function reservationRef() {
@@ -31,4 +31,4 @@ export function orderRef() {
 export const SPEC_UNAVAILABLE = 'Specification unavailable';
 
 export const RANGE_DISCLAIMER =
-  'Range, acceleration, charging performance, and other specifications may vary by configuration, region, software version, wheels, weather, driving style, and vehicle condition. Figures shown are based on published EPA estimates for the stated model year and trim where available. This marketplace is independent and is not owned or operated by Tesla, Inc.';
+  'Range, acceleration, charging performance, and other specifications may vary by configuration, region, software version, wheels, weather, driving style, and vehicle condition. Figures shown are based on published estimates for the stated model year and trim where available. Tesla Motors Marketplace is an affiliate partner of Tesla, Inc.';

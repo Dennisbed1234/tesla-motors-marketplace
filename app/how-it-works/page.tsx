@@ -1,18 +1,37 @@
 export default function HowItWorksPage() {
   const steps = [
-    { t: 'Explore', d: 'Browse the catalog of Tesla models and trims. Sample and catalog-only items are labeled clearly.' },
-    { t: 'Compare', d: 'Use the comparison tool to evaluate range, acceleration, price, and drive type side by side.' },
-    { t: 'Select', d: 'Open a vehicle detail page for galleries, specifications, and availability status.' },
-    { t: 'Reserve or inquire', d: 'Log in and request a reservation. The server verifies the vehicle is still AVAILABLE before creating a record.' },
-    { t: 'Complete the process', d: 'When payments are configured, deposits can be collected through a payment provider. Otherwise staff handle inquiries manually.' },
-    { t: 'Delivery or collection', d: 'Arrange handoff according to the operator’s delivery policy once the order is confirmed.' },
+    {
+      t: 'Explore',
+      d: 'Browse our Tesla catalog — Model 3, Model Y, Model S, Model X, Cybertruck, Semi, and the latest Roadster lineup.',
+    },
+    {
+      t: 'Compare',
+      d: 'Use the comparison tool to evaluate range, acceleration, price, and drive type side by side.',
+    },
+    {
+      t: 'Select',
+      d: 'Open a vehicle detail page for galleries, specifications, and current availability.',
+    },
+    {
+      t: 'Order or reserve',
+      d: 'Log in, choose a payment plan (25% down, 50% deposit, or full payment), and submit your order with delivery details.',
+    },
+    {
+      t: 'Complete payment',
+      d: 'Pay by card, wire transfer, or crypto using the instructions on your confirmation page. Our team verifies every transaction.',
+    },
+    {
+      t: 'Delivery or collection',
+      d: 'We coordinate handoff according to your delivery address and schedule once payment is confirmed.',
+    },
   ];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <h1 className="text-3xl font-semibold tracking-tight">How it works</h1>
       <p className="mt-3 text-sm text-ink-400">
-        This marketplace is independent of Tesla, Inc. Reservations never mark a vehicle sold without server-side checks.
+        Tesla Motors Marketplace is an affiliate partner of Tesla, Inc. We guide you from browsing
+        to delivery with a simple, secure process.
       </p>
       <ol className="mt-10 space-y-6">
         {steps.map((s, i) => (
