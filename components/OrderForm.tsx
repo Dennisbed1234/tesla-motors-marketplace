@@ -7,12 +7,22 @@ import { formatMoney } from '@/lib/utils';
 type Plan = 'FULL' | 'DEPOSIT_50' | 'DEPOSIT_25';
 type PayMethod = 'CARD' | 'WIRE' | 'CRYPTO';
 
+type Addr = {
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postal: string;
+  country: string;
+};
+
 export function OrderForm({
   vehicleId,
   currency,
   full,
   fifty,
   twentyFive,
+  profileAddress,
 }: {
   vehicleId: string;
   slug: string;
@@ -20,6 +30,7 @@ export function OrderForm({
   full: number;
   fifty: number;
   twentyFive: number;
+  profileAddress: Addr;
 }) {
   const [plan, setPlan] = useState<Plan>('DEPOSIT_25');
   const [method, setMethod] = useState<PayMethod>('CARD');
@@ -28,12 +39,21 @@ export function OrderForm({
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
+  const [billing, setBilling] = useState<Addr>({ ...profileAddress });
+  const [deliveryMode, setDeliveryMode] = useState<'PROFILE' | 'NEW'>(
+    profileAddress.line1 ? 'PROFILE' : 'NEW'
+  );
+  const [delivery, setDelivery] = useState<Addr>({ ...profileAddress });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
   const amount =
     plan === 'FULL' ? full : plan === 'DEPOSIT_50' ? fifty : twentyFive;
+
+  function addrValid(a: Addr) {
+    return a.line1.trim() && a.city.trim() && a.state.trim() && a.postal.trim() && a.country.trim();
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,6 +82,18 @@ export function OrderForm({
         setLoading(false);
         return;
       }
+      if (!addrValid(billing)) {
+        setError('Complete billing address');
+        setLoading(false);
+        return;
+      }
+    }
+
+    const ship = deliveryMode === 'PROFILE' ? profileAddress : delivery;
+    if (!addrValid(ship)) {
+      setError('Complete delivery address');
+      setLoading(false);
+      return;
     }
 
     try {
@@ -73,6 +105,9 @@ export function OrderForm({
           paymentPlan: plan,
           paymentMethod: method,
           notes,
+          billingAddress: method === 'CARD' ? billing : undefined,
+          deliveryMode,
+          deliveryAddress: ship,
           card:
             method === 'CARD'
               ? {
@@ -98,25 +133,70 @@ export function OrderForm({
   }
 
   const options: { id: Plan; title: string; amount: number; hint: string }[] = [
-    {
-      id: 'DEPOSIT_25',
-      title: '25% down payment',
-      amount: twentyFive,
-      hint: 'Mandatory minimum to secure the vehicle',
-    },
-    {
-      id: 'DEPOSIT_50',
-      title: '50% deposit',
-      amount: fifty,
-      hint: 'Half now, balance before delivery',
-    },
-    {
-      id: 'FULL',
-      title: 'Full payment',
-      amount: full,
-      hint: 'Pay the full vehicle price',
-    },
+    { id: 'DEPOSIT_25', title: '25% down payment', amount: twentyFive, hint: 'Mandatory minimum to secure the vehicle' },
+    { id: 'DEPOSIT_50', title: '50% deposit', amount: fifty, hint: 'Half now, balance before delivery' },
+    { id: 'FULL', title: 'Full payment', amount: full, hint: 'Pay the full vehicle price' },
   ];
+
+  function AddrFields({
+    value,
+    onChange,
+    prefix,
+  }: {
+    value: Addr;
+    onChange: (a: Addr) => void;
+    prefix: string;
+  }) {
+    return (
+      <div className="space-y-3">
+        <input
+          className="input"
+          placeholder="Street address"
+          value={value.line1}
+          onChange={(e) => onChange({ ...value, line1: e.target.value })}
+          required
+          aria-label={`${prefix} street`}
+        />
+        <input
+          className="input"
+          placeholder="Apt / suite (optional)"
+          value={value.line2}
+          onChange={(e) => onChange({ ...value, line2: e.target.value })}
+          aria-label={`${prefix} apt`}
+        />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <input
+            className="input"
+            placeholder="City"
+            value={value.city}
+            onChange={(e) => onChange({ ...value, city: e.target.value })}
+            required
+          />
+          <input
+            className="input"
+            placeholder="State"
+            value={value.state}
+            onChange={(e) => onChange({ ...value, state: e.target.value })}
+            required
+          />
+          <input
+            className="input"
+            placeholder="ZIP"
+            value={value.postal}
+            onChange={(e) => onChange({ ...value, postal: e.target.value })}
+            required
+          />
+        </div>
+        <input
+          className="input"
+          placeholder="Country"
+          value={value.country}
+          onChange={(e) => onChange({ ...value, country: e.target.value })}
+          required
+        />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-6">
@@ -130,13 +210,7 @@ export function OrderForm({
                 plan === o.id ? 'border-white/40 ring-1 ring-white/20' : ''
               }`}
             >
-              <input
-                type="radio"
-                name="plan"
-                className="mt-1"
-                checked={plan === o.id}
-                onChange={() => setPlan(o.id)}
-              />
+              <input type="radio" name="plan" className="mt-1" checked={plan === o.id} onChange={() => setPlan(o.id)} />
               <div className="flex-1">
                 <p className="font-medium">{o.title}</p>
                 <p className="text-xs text-ink-400">{o.hint}</p>
@@ -172,57 +246,24 @@ export function OrderForm({
       </div>
 
       {method === 'CARD' && (
-        <div className="card space-y-3 p-5">
+        <div className="card space-y-4 p-5">
           <p className="text-sm font-medium">Credit / Debit card</p>
-          <div>
-            <label className="label" htmlFor="cardName">Name on card</label>
-            <input
-              id="cardName"
-              className="input"
-              autoComplete="cc-name"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              required={method === 'CARD'}
-            />
-          </div>
-          <div>
-            <label className="label" htmlFor="cardNumber">Card number</label>
-            <input
-              id="cardNumber"
-              className="input font-mono"
-              inputMode="numeric"
-              autoComplete="cc-number"
-              placeholder="•••• •••• •••• ••••"
-              value={cardNumber}
-              onChange={(e) => setCardNumber(e.target.value)}
-              required={method === 'CARD'}
-            />
-          </div>
+          <input className="input" placeholder="Name on card" value={cardName} onChange={(e) => setCardName(e.target.value)} required />
+          <input
+            className="input font-mono"
+            placeholder="Card number"
+            inputMode="numeric"
+            value={cardNumber}
+            onChange={(e) => setCardNumber(e.target.value)}
+            required
+          />
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label" htmlFor="cardExpiry">Expiry (MM/YY)</label>
-              <input
-                id="cardExpiry"
-                className="input"
-                autoComplete="cc-exp"
-                placeholder="MM/YY"
-                value={cardExpiry}
-                onChange={(e) => setCardExpiry(e.target.value)}
-                required={method === 'CARD'}
-              />
-            </div>
-            <div>
-              <label className="label" htmlFor="cardCvv">CVV</label>
-              <input
-                id="cardCvv"
-                className="input"
-                inputMode="numeric"
-                autoComplete="cc-csc"
-                value={cardCvv}
-                onChange={(e) => setCardCvv(e.target.value)}
-                required={method === 'CARD'}
-              />
-            </div>
+            <input className="input" placeholder="MM/YY" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} required />
+            <input className="input" placeholder="CVV" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} required />
+          </div>
+          <div>
+            <p className="mb-2 text-sm font-medium">Billing address</p>
+            <AddrFields value={billing} onChange={setBilling} prefix="billing" />
           </div>
         </div>
       )}
@@ -231,19 +272,43 @@ export function OrderForm({
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-50">
           <p className="font-medium">Before you send crypto</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-100/90">
-            <li>Double-check the wallet address character by character. Funds sent to the wrong address cannot be recovered.</li>
-            <li>Select the correct network (e.g. ERC20 vs TRC20 vs BNB). Wrong network = permanent loss.</li>
-            <li>Network fees (gas / miner fees) are paid by you and are separate from the order amount.</li>
-            <li>Send only the exact amount due. Confirmation can take several minutes depending on the network.</li>
+            <li>Double-check the wallet address. Funds sent to the wrong address cannot be recovered.</li>
+            <li>Select the correct network (ERC20 vs TRC20 vs BNB). Wrong network = permanent loss.</li>
+            <li>Network fees are paid by you and are separate from the order amount.</li>
           </ul>
         </div>
       )}
 
       {method === 'WIRE' && (
         <p className="text-sm text-ink-400">
-          Wire instructions and bank details will appear on your confirmation page after you place the order.
+          Wire instructions appear on your confirmation page after you place the order.
         </p>
       )}
+
+      <div className="card space-y-3 p-5">
+        <p className="text-sm font-medium">Delivery address</p>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="radio"
+            checked={deliveryMode === 'PROFILE'}
+            onChange={() => setDeliveryMode('PROFILE')}
+            disabled={!profileAddress.line1}
+          />
+          Use address on file
+          {profileAddress.line1 && (
+            <span className="text-xs text-ink-400">
+              ({profileAddress.line1}, {profileAddress.city})
+            </span>
+          )}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="radio" checked={deliveryMode === 'NEW'} onChange={() => setDeliveryMode('NEW')} />
+          Use a different delivery address
+        </label>
+        {deliveryMode === 'NEW' && (
+          <AddrFields value={delivery} onChange={setDelivery} prefix="delivery" />
+        )}
+      </div>
 
       <div>
         <label className="label" htmlFor="notes">Notes (optional)</label>
@@ -252,7 +317,7 @@ export function OrderForm({
           className="input min-h-[80px]"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Preferred contact time, delivery notes…"
+          placeholder="Preferred contact time…"
         />
       </div>
 
@@ -261,17 +326,12 @@ export function OrderForm({
           <span className="text-ink-400">Due now</span>
           <span className="text-xl font-semibold">{formatMoney(amount, currency)}</span>
         </div>
-        {plan !== 'FULL' && (
-          <p className="mt-2 text-xs text-ink-500">
-            Remaining balance of {formatMoney(full - amount, currency)} is due before delivery.
-          </p>
-        )}
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       <button type="submit" disabled={loading} className="btn-primary w-full">
-        {loading ? 'Placing order…' : 'Confirm order'}
+        {loading ? 'Creating order…' : 'Create order'}
       </button>
     </form>
   );
