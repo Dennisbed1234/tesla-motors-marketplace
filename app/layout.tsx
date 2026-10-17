@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: '%s | Tesla Motors Marketplace',
   },
   description:
-    'Independent premium marketplace for Tesla electric vehicles. Browse models, compare specifications, and submit reservation or purchase inquiries. Not affiliated with Tesla, Inc.',
+    'Premium marketplace for Tesla electric vehicles. Browse models, compare specifications, and submit reservation or purchase inquiries. Not affiliated with Tesla, Inc.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   openGraph: {
     title: 'Tesla Motors — Premium Electric Vehicle Marketplace',
