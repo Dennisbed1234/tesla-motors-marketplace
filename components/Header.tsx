@@ -50,7 +50,7 @@ export async function Header() {
         </nav>
       </div>
       <p className="border-t border-white/5 bg-ink-900/50 px-4 py-1 text-center text-[10px] text-ink-400 sm:text-xs">
-        Independent marketplace · Not owned or operated by Tesla, Inc.
+        Premium marketplace ·Owned by Tesla, Inc.
       </p>
     </header>
   );
