@@ -1,6 +1,14 @@
 import Link from 'next/link';
+import { getSession } from '@/lib/auth';
 
-export function Footer() {
+export async function Footer() {
+  const session = await getSession();
+
+  // Logged-in users stay in the app experience — no guest marketing footer
+  if (session) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-white/10 bg-ink-950">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
