@@ -72,17 +72,23 @@ enum ChatStatus {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  passwordHash  String
-  fullName      String
-  phone         String?
-  country       String?
-  role          Role           @default(CUSTOMER)
-  status        AccountStatus  @default(ACTIVE)
-  emailVerified Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id               String         @id @default(cuid())
+  email            String         @unique
+  passwordHash     String
+  fullName         String
+  phone            String?
+  phoneCountryCode String?
+  country          String?
+  addressLine1     String?
+  addressLine2     String?
+  city             String?
+  stateRegion      String?
+  postalCode       String?
+  role             Role           @default(CUSTOMER)
+  status           AccountStatus  @default(ACTIVE)
+  emailVerified    Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   reservations   Reservation[]
   orders         Order[]
@@ -288,14 +294,14 @@ model AuditLog {
 }
 
 model ChatThread {
-  id           String     @id @default(cuid())
-  userId       String?
-  guestName    String?
-  guestEmail   String?
-  subject      String     @default("Support")
-  status       ChatStatus @default(OPEN)
-  lastMessageAt DateTime  @default(now())
-  createdAt    DateTime   @default(now())
+  id            String     @id @default(cuid())
+  userId        String?
+  guestName     String?
+  guestEmail    String?
+  subject       String     @default("Support")
+  status        ChatStatus @default(OPEN)
+  lastMessageAt DateTime   @default(now())
+  createdAt     DateTime   @default(now())
 
   user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   messages ChatMessage[]
