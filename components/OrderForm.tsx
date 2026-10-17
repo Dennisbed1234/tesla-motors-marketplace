@@ -31,6 +31,98 @@ function isCompleteAddr(a: Addr) {
   );
 }
 
+/** Must live outside OrderForm so inputs do not remount on every keystroke. */
+function AddrFields({
+  value,
+  onChange,
+  idPrefix,
+}: {
+  value: Addr;
+  onChange: (a: Addr) => void;
+  idPrefix: string;
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="label" htmlFor={`${idPrefix}-line1`}>
+          Street address
+        </label>
+        <input
+          id={`${idPrefix}-line1`}
+          className="input"
+          autoComplete="street-address"
+          value={value.line1}
+          onChange={(e) => onChange({ ...value, line1: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor={`${idPrefix}-line2`}>
+          Apt / suite (optional)
+        </label>
+        <input
+          id={`${idPrefix}-line2`}
+          className="input"
+          value={value.line2}
+          onChange={(e) => onChange({ ...value, line2: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor={`${idPrefix}-city`}>
+          City
+        </label>
+        <input
+          id={`${idPrefix}-city`}
+          className="input"
+          autoComplete="address-level2"
+          value={value.city}
+          onChange={(e) => onChange({ ...value, city: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor={`${idPrefix}-state`}>
+          State / region
+        </label>
+        <input
+          id={`${idPrefix}-state`}
+          className="input"
+          autoComplete="address-level1"
+          value={value.state}
+          onChange={(e) => onChange({ ...value, state: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor={`${idPrefix}-postal`}>
+          ZIP / postal code
+        </label>
+        <input
+          id={`${idPrefix}-postal`}
+          className="input"
+          autoComplete="postal-code"
+          value={value.postal}
+          onChange={(e) => onChange({ ...value, postal: e.target.value })}
+          required
+        />
+      </div>
+      <div>
+        <label className="label" htmlFor={`${idPrefix}-country`}>
+          Country
+        </label>
+        <input
+          id={`${idPrefix}-country`}
+          className="input"
+          autoComplete="country-name"
+          value={value.country}
+          onChange={(e) => onChange({ ...value, country: e.target.value })}
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
 export function OrderForm({
   vehicleId,
   currency,
@@ -155,77 +247,6 @@ export function OrderForm({
     { id: 'FULL', title: 'Full payment', amount: full, hint: 'Full vehicle price' },
   ];
 
-  function AddrFields({
-    value,
-    onChange,
-  }: {
-    value: Addr;
-    onChange: (a: Addr) => void;
-  }) {
-    return (
-      <div className="space-y-3">
-        <div>
-          <label className="label">Street address</label>
-          <input
-            className="input"
-            autoComplete="street-address"
-            value={value.line1}
-            onChange={(e) => onChange({ ...value, line1: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="label">Apt / suite (optional)</label>
-          <input
-            className="input"
-            value={value.line2}
-            onChange={(e) => onChange({ ...value, line2: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="label">City</label>
-          <input
-            className="input"
-            autoComplete="address-level2"
-            value={value.city}
-            onChange={(e) => onChange({ ...value, city: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="label">State / region</label>
-          <input
-            className="input"
-            autoComplete="address-level1"
-            value={value.state}
-            onChange={(e) => onChange({ ...value, state: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="label">ZIP / postal code</label>
-          <input
-            className="input"
-            autoComplete="postal-code"
-            value={value.postal}
-            onChange={(e) => onChange({ ...value, postal: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="label">Country</label>
-          <input
-            className="input"
-            autoComplete="country-name"
-            value={value.country}
-            onChange={(e) => onChange({ ...value, country: e.target.value })}
-            required
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-6 pb-8">
       <div>
@@ -297,7 +318,9 @@ export function OrderForm({
           <span className="font-medium">Enter a new mailing address</span>
         </label>
 
-        {deliveryMode === 'NEW' && <AddrFields value={delivery} onChange={setDelivery} />}
+        {deliveryMode === 'NEW' && (
+          <AddrFields idPrefix="delivery" value={delivery} onChange={setDelivery} />
+        )}
       </div>
 
       <div>
@@ -328,26 +351,26 @@ export function OrderForm({
         <div className="card space-y-4 p-5">
           <p className="text-sm font-medium">Credit / Debit card</p>
           <div>
-            <label className="label">Name on card</label>
-            <input className="input" value={cardName} onChange={(e) => setCardName(e.target.value)} required />
+            <label className="label" htmlFor="card-name">Name on card</label>
+            <input id="card-name" className="input" value={cardName} onChange={(e) => setCardName(e.target.value)} required />
           </div>
           <div>
-            <label className="label">Card number</label>
-            <input className="input font-mono" inputMode="numeric" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} required />
+            <label className="label" htmlFor="card-number">Card number</label>
+            <input id="card-number" className="input font-mono" inputMode="numeric" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Expiry (MM/YY)</label>
-              <input className="input" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} required />
+              <label className="label" htmlFor="card-expiry">Expiry (MM/YY)</label>
+              <input id="card-expiry" className="input" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} required />
             </div>
             <div>
-              <label className="label">CVV</label>
-              <input className="input" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} required />
+              <label className="label" htmlFor="card-cvv">CVV</label>
+              <input id="card-cvv" className="input" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} required />
             </div>
           </div>
           <div>
             <p className="mb-2 text-sm font-medium">Billing address</p>
-            <AddrFields value={billing} onChange={setBilling} />
+            <AddrFields idPrefix="billing" value={billing} onChange={setBilling} />
           </div>
         </div>
       )}
