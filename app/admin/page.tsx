@@ -19,6 +19,7 @@ export default async function AdminPage() {
     sold,
     customers,
     pendingReservations,
+    openChats,
     recentReservations,
     recentUsers,
   ] = await Promise.all([
@@ -28,6 +29,7 @@ export default async function AdminPage() {
     prisma.vehicle.count({ where: { inventoryStatus: 'SOLD' } }),
     prisma.user.count({ where: { role: 'CUSTOMER' } }),
     prisma.reservation.count({ where: { status: 'PENDING' } }),
+    prisma.chatThread.count({ where: { status: 'OPEN' } }).catch(() => 0),
     prisma.reservation.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
@@ -47,6 +49,7 @@ export default async function AdminPage() {
     { label: 'Sold', value: sold },
     { label: 'Customers', value: customers },
     { label: 'Pending reservations', value: pendingReservations },
+    { label: 'Open chats', value: openChats },
   ];
 
   return (
@@ -56,8 +59,10 @@ export default async function AdminPage() {
           <h1 className="text-2xl font-semibold">Admin dashboard</h1>
           <p className="text-sm text-ink-400">Signed in as {session.email}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/admin/vehicles" className="btn-secondary !py-2 text-xs">Manage vehicles</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/vehicles" className="btn-secondary !py-2 text-xs">Vehicles</Link>
+          <Link href="/admin/users" className="btn-secondary !py-2 text-xs">Users</Link>
+          <Link href="/admin/chat" className="btn-secondary !py-2 text-xs">Live chat</Link>
           <LogoutButton />
         </div>
       </div>
@@ -103,7 +108,10 @@ export default async function AdminPage() {
       </section>
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold">Recent customers</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Recent customers</h2>
+          <Link href="/admin/users" className="text-sm text-ink-400 hover:text-white">View all →</Link>
+        </div>
         <ul className="mt-4 space-y-2">
           {recentUsers.map((u) => (
             <li key={u.id} className="card flex justify-between p-4 text-sm">
