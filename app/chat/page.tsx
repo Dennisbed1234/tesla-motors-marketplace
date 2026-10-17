@@ -72,9 +72,7 @@ export default function ChatPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-semibold">Live chat</h1>
-      <p className="mt-2 text-sm text-ink-400">
-        Message our team. We reply here and notify staff by email (Resend or Gmail SMTP).
-      </p>
+      <p className="mt-2 text-sm text-ink-400">Message our team. We reply within minutes.</p>
 
       <div className="card mt-6 flex flex-1 flex-col overflow-hidden">
         <div className="flex-1 space-y-3 overflow-y-auto p-4" style={{ minHeight: 280 }}>
