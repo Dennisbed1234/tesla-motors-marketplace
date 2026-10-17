@@ -5,26 +5,15 @@ import { RANGE_DISCLAIMER } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-type FeaturedVehicle = Awaited<
-  ReturnType<
-    typeof prisma.vehicle.findMany<{
-      include: { images: true };
-    }>
-  >
->[number];
-
 export default async function HomePage() {
-  let featured: FeaturedVehicle[] = [];
-  try {
-    featured = await prisma.vehicle.findMany({
+  const featured = await prisma.vehicle
+    .findMany({
       where: { published: true, featured: true },
       include: { images: { orderBy: { displayOrder: 'asc' }, take: 1 } },
       orderBy: { price: 'asc' },
       take: 6,
-    });
-  } catch {
-    featured = [];
-  }
+    })
+    .catch(() => []);
 
   return (
     <>
