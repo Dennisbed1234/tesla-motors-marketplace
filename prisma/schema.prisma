@@ -323,3 +323,16 @@ model ChatMessage {
 
   @@index([threadId, createdAt])
 }
+
+model AdminNotification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  body      String   @db.Text
+  href      String?
+  read      Boolean  @default(false)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([read, createdAt])
+}
