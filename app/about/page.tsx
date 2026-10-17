@@ -32,14 +32,6 @@ export default function AboutPage() {
               New York, NY 10017
             </dd>
           </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-ink-500">Email</dt>
-            <dd className="mt-1">
-              <a href="mailto:personalofficedesk@gmail.com" className="text-white hover:underline">
-                personalofficedesk@gmail.com
-              </a>
-            </dd>
-          </div>
         </dl>
       </div>
     </div>
