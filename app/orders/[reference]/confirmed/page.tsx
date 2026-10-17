@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { formatMoney } from '@/lib/utils';
+import { DEFAULT_PAYMENT_METHODS, PAYMENT_METHODS_KEY, type PaymentMethodsConfig } from '@/lib/payments';
+import { PaymentInstructions } from '@/components/PaymentInstructions';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +31,14 @@ export default async function OrderConfirmedPage({
     planMeta = order.internalNotes ? JSON.parse(order.internalNotes) : {};
   } catch {
     planMeta = {};
+  }
+
+  let payConfig: PaymentMethodsConfig = DEFAULT_PAYMENT_METHODS;
+  try {
+    const row = await prisma.siteContent.findUnique({ where: { key: PAYMENT_METHODS_KEY } });
+    if (row?.body) payConfig = { ...DEFAULT_PAYMENT_METHODS, ...JSON.parse(row.body) };
+  } catch {
+    payConfig = DEFAULT_PAYMENT_METHODS;
   }
 
   const price = Number(order.sellingPrice);
@@ -73,21 +83,15 @@ export default async function OrderConfirmedPage({
 
           <div className="space-y-4 text-sm">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
-                Order number
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Order number</p>
               <p className="mt-1 font-mono text-base">{order.reference}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
-                Vehicle price
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Vehicle price</p>
               <p className="mt-1 text-base">{formatMoney(price, order.currency)}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
-                Payment selected
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Payment selected</p>
               <p className="mt-1 text-base">
                 {planMeta.planLabel || 'Down payment'} ·{' '}
                 <span className="font-semibold">{formatMoney(amountDue, order.currency)}</span>
@@ -97,24 +101,26 @@ export default async function OrderConfirmedPage({
               </p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
-                Next payment
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Next payment</p>
               <p className="mt-1 text-base">
                 {planMeta.paymentPlan === 'FULL'
                   ? 'None — full amount selected'
                   : formatMoney(price - amountDue, order.currency) + ' before delivery'}
               </p>
-              <p className="mt-1 text-xs text-ink-500">
-                You will be contacted with next steps, including final payment and delivery timeline.
-              </p>
             </div>
           </div>
         </div>
 
+        <div className="border-t border-ink-100 pt-2">
+          <PaymentInstructions
+            config={payConfig}
+            amountLabel={formatMoney(amountDue, order.currency)}
+          />
+        </div>
+
         <div className="mt-10 flex flex-col items-center gap-3 border-t border-ink-100 pt-8 sm:flex-row sm:justify-between">
           <p className="text-sm text-ink-500">
-            You’ll receive an email with your order details shortly (when email is configured).
+            Include your order number ({order.reference}) with any transfer.
           </p>
           <Link
             href="/account"
