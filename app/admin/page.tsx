@@ -20,8 +20,10 @@ export default async function AdminPage() {
     customers,
     pendingReservations,
     openChats,
+    unreadNotifications,
     recentReservations,
     recentUsers,
+    recentNotifications,
   ] = await Promise.all([
     prisma.vehicle.count(),
     prisma.vehicle.count({ where: { inventoryStatus: 'AVAILABLE' } }),
@@ -30,6 +32,7 @@ export default async function AdminPage() {
     prisma.user.count({ where: { role: 'CUSTOMER' } }),
     prisma.reservation.count({ where: { status: 'PENDING' } }),
     prisma.chatThread.count({ where: { status: 'OPEN' } }).catch(() => 0),
+    prisma.adminNotification.count({ where: { read: false } }).catch(() => 0),
     prisma.reservation.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
@@ -40,6 +43,7 @@ export default async function AdminPage() {
       orderBy: { createdAt: 'desc' },
       select: { id: true, email: true, fullName: true, role: true, createdAt: true, status: true },
     }),
+    prisma.adminNotification.findMany({ take: 8, orderBy: { createdAt: 'desc' } }).catch(() => []),
   ]);
 
   const cards = [
@@ -50,6 +54,7 @@ export default async function AdminPage() {
     { label: 'Customers', value: customers },
     { label: 'Pending reservations', value: pendingReservations },
     { label: 'Open chats', value: openChats },
+    { label: 'Unread alerts', value: unreadNotifications },
   ];
 
   return (
@@ -60,6 +65,9 @@ export default async function AdminPage() {
           <p className="text-sm text-ink-400">Signed in as {session.email}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/notifications" className="btn-secondary !py-2 text-xs">
+            Notifications{unreadNotifications ? ` (${unreadNotifications})` : ''}
+          </Link>
           <Link href="/admin/vehicles" className="btn-secondary !py-2 text-xs">Vehicles</Link>
           <Link href="/admin/users" className="btn-secondary !py-2 text-xs">Users</Link>
           <Link href="/admin/payments" className="btn-secondary !py-2 text-xs">Payments</Link>
@@ -68,7 +76,7 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="card p-5">
             <p className="text-xs uppercase tracking-wider text-ink-500">{c.label}</p>
@@ -76,6 +84,25 @@ export default async function AdminPage() {
           </div>
         ))}
       </div>
+
+      <section className="mt-12">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Latest alerts</h2>
+          <Link href="/admin/notifications" className="text-sm text-ink-400 hover:text-white">View all →</Link>
+        </div>
+        <ul className="mt-4 space-y-2">
+          {recentNotifications.length === 0 && (
+            <li className="text-sm text-ink-500">No alerts yet. New signups and orders appear here and by email.</li>
+          )}
+          {recentNotifications.map((n) => (
+            <li key={n.id} className={`card p-4 text-sm ${n.read ? 'opacity-60' : ''}`}>
+              <span className="text-xs uppercase text-ink-500">{n.type}</span>
+              <p className="font-medium">{n.title}</p>
+              <p className="text-ink-400">{n.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="mt-12">
         <h2 className="text-lg font-semibold">Recent reservations</h2>
