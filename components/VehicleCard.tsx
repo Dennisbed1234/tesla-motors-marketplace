@@ -18,7 +18,7 @@ type Props = {
 
 export function VehicleCard(v: Props) {
   const price = Number(v.price);
-  const isCatalog = v.inventoryStatus === 'CATALOG_ONLY' || price <= 0;
+  const showPrice = price > 0;
 
   return (
     <article className="card group flex flex-col transition hover:border-white/25">
@@ -40,11 +40,6 @@ export function VehicleCard(v: Props) {
               Available
             </span>
           )}
-          {isCatalog && (
-            <span className="rounded-full bg-ink-700/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-ink-100">
-              Catalog only
-            </span>
-          )}
         </div>
       </div>
       <div className="flex flex-1 flex-col p-5">
@@ -58,13 +53,13 @@ export function VehicleCard(v: Props) {
         </div>
         <div className="mt-auto flex items-end justify-between pt-5">
           <div>
-            {isCatalog ? (
-              <p className="text-sm text-ink-400">Reference only</p>
-            ) : (
+            {showPrice ? (
               <>
                 <p className="text-xs text-ink-400">From</p>
                 <p className="text-xl font-semibold">{formatMoney(price, v.currency)}</p>
               </>
+            ) : (
+              <p className="text-sm text-ink-400">Contact for pricing</p>
             )}
           </div>
           <Link href={`/vehicles/${v.slug}`} className="btn-secondary !px-4 !py-2 text-xs">
