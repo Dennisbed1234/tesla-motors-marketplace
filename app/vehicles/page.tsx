@@ -15,6 +15,14 @@ type SearchParams = {
   max?: string;
 };
 
+type VehicleWithImage = Awaited<
+  ReturnType<
+    typeof prisma.vehicle.findMany<{
+      include: { images: true };
+    }>
+  >
+>[number];
+
 export default async function VehiclesPage({
   searchParams,
 }: {
@@ -44,7 +52,7 @@ export default async function VehiclesPage({
   if (searchParams.sort === 'price-desc') orderBy = { price: 'desc' };
   if (searchParams.sort === 'newest') orderBy = { modelYear: 'desc' };
 
-  let vehicles: Awaited<ReturnType<typeof prisma.vehicle.findMany>> = [];
+  let vehicles: VehicleWithImage[] = [];
   try {
     vehicles = await prisma.vehicle.findMany({
       where,
