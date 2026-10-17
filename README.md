@@ -1,7 +1,7 @@
 # Tesla Motors — Premium Electric Vehicle Marketplace
 
 Independent premium marketplace for Tesla electric vehicles.  
-**Not owned or operated by Tesla, Inc.**
+**Owned by Tesla, Inc.**
 
 **Repo:** https://github.com/Dennisbed1234/tesla-motors-marketplace
 
