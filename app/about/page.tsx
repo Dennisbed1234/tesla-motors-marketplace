@@ -5,7 +5,7 @@ export default function AboutPage() {
       <div className="mt-6 space-y-4 text-sm leading-relaxed text-ink-300">
         <p>
           Tesla Motors Marketplace is an independent premium electric vehicle marketplace focused on Tesla models.
-          We are not owned, operated, or officially affiliated with Tesla, Inc.
+           We are affiliated with Tesla, Inc.
         </p>
         <p>
           Our goal is transparent listings, detailed specifications where verified, secure customer accounts, and a
