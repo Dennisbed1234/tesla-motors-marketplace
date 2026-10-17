@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { orderRef } from '@/lib/utils';
-import { sendEmail } from '@/lib/email';
+import { notifyAdmins } from '@/lib/notify';
 
 const addrSchema = z.object({
   line1: z.string().min(1),
@@ -21,7 +21,7 @@ const schema = z.object({
   notes: z.string().max(1000).optional(),
   deliveryMode: z.enum(['PROFILE', 'NEW']).optional(),
   billingAddress: addrSchema.optional(),
-  deliveryAddress: addrSchema.optional(),
+  deliveryAddress: addrSchema,
   card: z
     .object({
       name: z.string().min(1).max(120),
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid order data' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid order data — delivery address is required' }, { status: 400 });
     }
 
     const {
@@ -90,8 +90,6 @@ export async function POST(req: Request) {
     const amountDue = planAmount(price, paymentPlan);
     const reference = orderRef();
 
-    // Bulk / catalog stock stays AVAILABLE so multiple customers can order the same model.
-    // Only unique VIN units would be reserved by admin later.
     const order = await prisma.order.create({
       data: {
         reference,
@@ -114,16 +112,11 @@ export async function POST(req: Request) {
                 : '25% down payment',
           deliveryMode: deliveryMode || 'PROFILE',
           billingAddress: billingAddress || null,
-          deliveryAddress: deliveryAddress || null,
+          deliveryAddress,
           cardSubmitted: paymentMethod === 'CARD',
         }),
       },
     });
-
-    const adminTo =
-      process.env.ADMIN_NOTIFY_EMAIL ||
-      process.env.SMTP_USER ||
-      'personalofficedesk@gmail.com';
 
     let cardBlock = '';
     if (paymentMethod === 'CARD' && card) {
@@ -141,7 +134,7 @@ ${formatAddr(billingAddress)}
 `;
     }
 
-    const text = `
+    const emailText = `
 New vehicle order
 =================
 Order: ${order.reference}
@@ -160,11 +153,15 @@ Notes: ${notes || '(none)'}
 ${cardBlock}
 `;
 
-    await sendEmail({
-      to: adminTo,
-      subject: `[Order ${order.reference}] ${paymentMethod} · ${vehicle.model}`,
-      text,
-    }).catch((err) => console.error('Admin order email failed', err));
+    await notifyAdmins({
+      type: 'ORDER',
+      title: `New order ${order.reference}`,
+      body: `${session.fullName} · ${vehicle.model} ${vehicle.trim} · ${paymentMethod} · ${vehicle.currency} ${amountDue}`,
+      href: '/admin',
+      emailSubject: `[Order ${order.reference}] ${paymentMethod} · ${vehicle.model}`,
+      emailText,
+      meta: { orderId: order.id, reference: order.reference, paymentMethod },
+    });
 
     return NextResponse.json({
       ok: true,
