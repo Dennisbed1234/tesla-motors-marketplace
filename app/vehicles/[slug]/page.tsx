@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { formatMoney, RANGE_DISCLAIMER, SPEC_UNAVAILABLE } from '@/lib/utils';
 import { getSession } from '@/lib/auth';
-import { ReserveButton } from '@/components/ReserveButton';
 import { FavoriteButton } from '@/components/FavoriteButton';
 
 export const dynamic = 'force-dynamic';
@@ -29,10 +28,8 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
 
   const session = await getSession();
   const price = Number(vehicle.price);
-  const canReserve =
-    vehicle.inventoryStatus === 'AVAILABLE' && vehicle.condition !== 'SAMPLE'
-      ? true
-      : vehicle.inventoryStatus === 'AVAILABLE';
+  const canOrder = vehicle.inventoryStatus === 'AVAILABLE' && price > 0;
+  const deposit25 = Math.round(price * 0.25 * 100) / 100;
 
   const specs: [string, string][] = [
     ['Model year', String(vehicle.modelYear)],
@@ -53,6 +50,7 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
     ['Charging', vehicle.charging || SPEC_UNAVAILABLE],
     ['Safety', vehicle.safetyRating || SPEC_UNAVAILABLE],
     ['Market', vehicle.market],
+    ['Min. down payment (25%)', price > 0 ? formatMoney(deposit25, vehicle.currency) : SPEC_UNAVAILABLE],
   ];
 
   return (
@@ -104,17 +102,24 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
               {vehicle.inventoryStatus.replace('_', ' ')}
             </span>
           </div>
+          {price > 0 && (
+            <p className="mt-2 text-sm text-ink-400">
+              From {formatMoney(deposit25, vehicle.currency)} down (25% minimum)
+            </p>
+          )}
 
           <div className="mt-8 flex flex-wrap gap-3">
-            {canReserve && session ? (
-              <ReserveButton vehicleId={vehicle.id} />
-            ) : canReserve && !session ? (
-              <Link href={`/login?next=/vehicles/${vehicle.slug}`} className="btn-primary">
-                Log in to reserve
+            {canOrder && session ? (
+              <Link href={`/vehicles/${vehicle.slug}/order`} className="btn-primary">
+                Place order
+              </Link>
+            ) : canOrder && !session ? (
+              <Link href={`/login?next=/vehicles/${vehicle.slug}/order`} className="btn-primary">
+                Log in to order
               </Link>
             ) : (
               <button className="btn-primary opacity-50" disabled>
-                Not available to reserve
+                Not available to order
               </button>
             )}
             {session && <FavoriteButton vehicleId={vehicle.id} />}
