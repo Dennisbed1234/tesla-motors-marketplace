@@ -10,8 +10,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function OrderConfirmedPage({
   params,
+  searchParams,
 }: {
   params: { reference: string };
+  searchParams?: { method?: string };
 }) {
   const session = await getSession();
   if (!session) redirect('/login');
@@ -26,7 +28,12 @@ export default async function OrderConfirmedPage({
 
   if (!order || order.userId !== session.id) notFound();
 
-  let planMeta: { paymentPlan?: string; amountDue?: number; planLabel?: string } = {};
+  let planMeta: {
+    paymentPlan?: string;
+    amountDue?: number;
+    planLabel?: string;
+    paymentMethod?: string;
+  } = {};
   try {
     planMeta = order.internalNotes ? JSON.parse(order.internalNotes) : {};
   } catch {
@@ -40,6 +47,9 @@ export default async function OrderConfirmedPage({
   } catch {
     payConfig = DEFAULT_PAYMENT_METHODS;
   }
+
+  const preferredMethod =
+    searchParams?.method || planMeta.paymentMethod || null;
 
   const price = Number(order.sellingPrice);
   const amountDue = planMeta.amountDue ?? price * 0.25;
@@ -115,6 +125,7 @@ export default async function OrderConfirmedPage({
           <PaymentInstructions
             config={payConfig}
             amountLabel={formatMoney(amountDue, order.currency)}
+            preferredMethod={preferredMethod}
           />
         </div>
 
