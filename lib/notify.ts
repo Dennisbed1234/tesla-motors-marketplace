@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 
@@ -8,7 +9,7 @@ export async function notifyAdmins(opts: {
   href?: string;
   emailSubject?: string;
   emailText?: string;
-  meta?: Record<string, unknown>;
+  meta?: Prisma.InputJsonValue;
 }) {
   await prisma.adminNotification
     .create({
@@ -17,7 +18,7 @@ export async function notifyAdmins(opts: {
         title: opts.title,
         body: opts.body,
         href: opts.href || null,
-        meta: opts.meta || undefined,
+        meta: opts.meta ?? Prisma.JsonNull,
       },
     })
     .catch((e) => console.error('AdminNotification create failed', e));
