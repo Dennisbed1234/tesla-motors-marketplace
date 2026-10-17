@@ -5,22 +5,14 @@ export default function ContactPage() {
       <p className="mt-3 text-sm text-ink-400">
         Update this page with your real business email, phone, and address before launch.
       </p>
-      <form className="mt-8 space-y-4" action="#" method="post" onSubmit={(e) => e.preventDefault()}>
-        <div>
-          <label className="label" htmlFor="name">Name</label>
-          <input id="name" name="name" className="input" required />
-        </div>
-        <div>
-          <label className="label" htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" className="input" required />
-        </div>
-        <div>
-          <label className="label" htmlFor="message">Message</label>
-          <textarea id="message" name="message" rows={5} className="input" required />
-        </div>
-        <button type="submit" className="btn-primary">Send message</button>
-        <p className="text-xs text-ink-500">Wire this form to your email provider (e.g. Resend) when credentials are configured.</p>
-      </form>
+      <div className="mt-8 space-y-4 rounded-2xl border border-white/10 bg-ink-900/50 p-6 text-sm text-ink-300">
+        <p><span className="text-ink-500">Email:</span> support@example.com</p>
+        <p><span className="text-ink-500">Phone:</span> +1 (000) 000-0000</p>
+        <p><span className="text-ink-500">Address:</span> Configure in admin content settings</p>
+      </div>
+      <p className="mt-6 text-xs text-ink-500">
+        Connect a form handler (Resend or similar) when transactional email is configured.
+      </p>
     </div>
   );
 }
