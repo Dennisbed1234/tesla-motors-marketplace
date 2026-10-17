@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-/** High-quality Unsplash photos matched to each model family where possible. */
 const IMG = {
   model3: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=1600&q=80',
   model3b: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=1600&q=80',
@@ -11,7 +10,6 @@ const IMG = {
   modelS: 'https://images.unsplash.com/photo-1536700503339-1e4b06520771?w=1600&q=80',
   modelX: 'https://images.unsplash.com/photo-1617704548623-340376564e68?w=1600&q=80',
   cybertruck: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=1600&q=80',
-  roadster: 'https://images.unsplash.com/photo-1553440569-bcc899a47639?w=1600&q=80',
   semi: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1600&q=80',
 };
 
@@ -351,19 +349,97 @@ const vehicles = [
   {
     model: 'Roadster',
     modelYear: 2026,
-    trim: 'Base',
-    slug: 'roadster-2026',
-    description: 'Next-generation high-performance Roadster. Available for order.',
+    trim: 'Performance',
+    slug: 'roadster-performance',
+    description:
+      'All-electric sports car with active aerodynamics, multi-mode suction system, and performance-focused handling. 0–60 mph in 1.6 seconds.',
     category: 'PASSENGER' as const,
     condition: 'NEW' as const,
-    price: 70000,
-    depositAmount: 17500,
+    exteriorColor: 'Silver',
+    interiorColor: 'Black',
+    price: 170000,
+    depositAmount: 42500,
     inventoryStatus: 'AVAILABLE' as const,
     featured: true,
-    accel060: 'Under 2 sec (est.)',
-    seating: 4,
+    driveType: 'All-Electric',
+    accel060: '1.6 sec (0–60 mph)',
+    topSpeed: 'Not officially confirmed',
+    rangeStandard: 'Not officially confirmed',
+    seating: 2,
     market: 'US',
-    images: [{ url: '/images/roadster.png', altText: 'Tesla Roadster', displayOrder: 0 }],
+    specsJson: {
+      categoryLabel: 'All-Electric Sports Car',
+      features: [
+        'Active aerodynamic system',
+        'Multi-mode suction system',
+        'Advanced electric powertrain',
+        'Performance-focused handling',
+        'Aerodynamic downforce technology',
+      ],
+    },
+    images: [{ url: '/images/roadster.png', altText: 'Tesla Roadster Performance', displayOrder: 0 }],
+  },
+  {
+    model: 'Roadster',
+    modelYear: 2026,
+    trim: 'Thrust',
+    slug: 'roadster-thrust',
+    description:
+      'Electric performance sports car with auxiliary cold-gas thrusters and experimental acceleration technology. Target under 1 second 0–60 mph.',
+    category: 'PASSENGER' as const,
+    condition: 'NEW' as const,
+    exteriorColor: 'Silver',
+    interiorColor: 'Black',
+    price: 200000,
+    depositAmount: 50000,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
+    driveType: 'All-Electric with Auxiliary Cold-Gas Thrusters',
+    accel060: 'Under 1 sec (0–60 mph, reported target)',
+    seating: 2,
+    market: 'US',
+    specsJson: {
+      categoryLabel: 'Electric Performance Sports Car',
+      features: [
+        'Rear-mounted cold-gas thrusters',
+        'Experimental acceleration technology',
+        'Active aerodynamic system',
+        'Multi-mode suction system',
+        'Advanced aerodynamic downforce',
+      ],
+    },
+    images: [{ url: '/images/roadster_thrust.png', altText: 'Tesla Roadster Thrust', displayOrder: 0 }],
+  },
+  {
+    model: 'Roadster',
+    modelYear: 2026,
+    trim: 'Rocket',
+    slug: 'roadster-rocket',
+    description:
+      'Experimental electric sports car with cold-gas thruster system and advanced vehicle-control concepts. 0–60 mph in 0.37 seconds.',
+    category: 'PASSENGER' as const,
+    condition: 'NEW' as const,
+    exteriorColor: 'Silver',
+    interiorColor: 'Black',
+    price: 300000,
+    depositAmount: 75000,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
+    driveType: 'Electric with Experimental Thruster Technology',
+    accel060: '0.37 sec (0–60 mph)',
+    seating: 1,
+    market: 'US',
+    specsJson: {
+      categoryLabel: 'Experimental Electric Sports Car',
+      features: [
+        'Experimental cold-gas thruster system',
+        'Proposed upward and rotational movement',
+        'Advanced vehicle-control concepts',
+        'Experimental aerodynamic configuration',
+        'Advanced downforce technology',
+      ],
+    },
+    images: [{ url: '/images/roadster_rocket.png', altText: 'Tesla Roadster Rocket', displayOrder: 0 }],
   },
 ];
 
@@ -387,27 +463,27 @@ async function main() {
       await prisma.vehicleImage.createMany({
         data: images.map((img) => ({ ...img, vehicleId: vehicle.id })),
       });
+    } else if (images?.[0]) {
+      const first = await prisma.vehicleImage.findFirst({
+        where: { vehicleId: vehicle.id },
+        orderBy: { displayOrder: 'asc' },
+      });
+      if (first) {
+        await prisma.vehicleImage.update({
+          where: { id: first.id },
+          data: { url: images[0].url, altText: images[0].altText },
+        });
+      }
     }
   }
 
-  // Migrate old Roadster slug if present
-  await prisma.vehicle
-    .updateMany({
-      where: { slug: 'roadster-announced' },
-      data: {
-        slug: 'roadster-2026',
-        trim: 'Base',
-        category: 'PASSENGER',
-        condition: 'NEW',
-        inventoryStatus: 'AVAILABLE',
-        price: 70000,
-        depositAmount: 17500,
-        description: 'Next-generation high-performance Roadster. Available for order.',
-        disclaimer: null,
-        featured: true,
-      },
-    })
-    .catch(() => null);
+  // Remove legacy single Roadster rows
+  await prisma.vehicleImage.deleteMany({
+    where: { vehicle: { slug: { in: ['roadster-announced', 'roadster-2026', 'roadster-base'] } } },
+  }).catch(() => null);
+  await prisma.vehicle.deleteMany({
+    where: { slug: { in: ['roadster-announced', 'roadster-2026', 'roadster-base'] } },
+  }).catch(() => null);
 
   const adminEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL || 'personalofficedesk@gmail.com').toLowerCase();
   const adminPass = process.env.ADMIN_BOOTSTRAP_PASSWORD || 'Yalateef1$';
