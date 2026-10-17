@@ -15,14 +15,6 @@ type SearchParams = {
   max?: string;
 };
 
-type VehicleWithImage = Awaited<
-  ReturnType<
-    typeof prisma.vehicle.findMany<{
-      include: { images: true };
-    }>
-  >
->[number];
-
 export default async function VehiclesPage({
   searchParams,
 }: {
@@ -52,16 +44,13 @@ export default async function VehiclesPage({
   if (searchParams.sort === 'price-desc') orderBy = { price: 'desc' };
   if (searchParams.sort === 'newest') orderBy = { modelYear: 'desc' };
 
-  let vehicles: VehicleWithImage[] = [];
-  try {
-    vehicles = await prisma.vehicle.findMany({
+  const vehicles = await prisma.vehicle
+    .findMany({
       where,
       include: { images: { orderBy: { displayOrder: 'asc' }, take: 1 } },
       orderBy,
-    });
-  } catch {
-    vehicles = [];
-  }
+    })
+    .catch(() => []);
 
   const models = ['Model 3', 'Model Y', 'Model S', 'Model X', 'Cybertruck', 'Semi', 'Roadster'];
 
