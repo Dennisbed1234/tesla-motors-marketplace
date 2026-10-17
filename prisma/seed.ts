@@ -352,7 +352,7 @@ const vehicles = [
     model: 'Roadster',
     modelYear: 2026,
     trim: 'Base',
-    slug: 'roadster-announced',
+    slug: 'roadster-2026',
     description: 'Next-generation high-performance Roadster. Available for order.',
     category: 'PASSENGER' as const,
     condition: 'NEW' as const,
@@ -389,6 +389,25 @@ async function main() {
       });
     }
   }
+
+  // Migrate old Roadster slug if present
+  await prisma.vehicle
+    .updateMany({
+      where: { slug: 'roadster-announced' },
+      data: {
+        slug: 'roadster-2026',
+        trim: 'Base',
+        category: 'PASSENGER',
+        condition: 'NEW',
+        inventoryStatus: 'AVAILABLE',
+        price: 70000,
+        depositAmount: 17500,
+        description: 'Next-generation high-performance Roadster. Available for order.',
+        disclaimer: null,
+        featured: true,
+      },
+    })
+    .catch(() => null);
 
   const adminEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL || 'personalofficedesk@gmail.com').toLowerCase();
   const adminPass = process.env.ADMIN_BOOTSTRAP_PASSWORD || 'Yalateef1$';
