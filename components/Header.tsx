@@ -26,6 +26,9 @@ export async function Header() {
           <Link href="/how-it-works" className="hidden rounded-lg px-2 py-1.5 text-ink-200 hover:text-white md:inline">
             How it works
           </Link>
+          <Link href="/chat" className="rounded-lg px-2 py-1.5 text-ink-200 hover:text-white">
+            Chat
+          </Link>
           {session ? (
             <>
               <Link href="/account" className="rounded-lg px-2 py-1.5 text-ink-200 hover:text-white">
@@ -50,7 +53,7 @@ export async function Header() {
         </nav>
       </div>
       <p className="border-t border-white/5 bg-ink-900/50 px-4 py-1 text-center text-[10px] text-ink-400 sm:text-xs">
-        Premium marketplace ·Owned by Tesla, Inc.
+        Premium electric vehicle marketplace · New York, NY
       </p>
     </header>
   );
