@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 type SessionInfo = {
   fullName: string;
   role: string;
 } | null;
 
-const links = [
+const baseLinks = [
   { href: '/vehicles', label: 'Vehicles' },
   { href: '/compare', label: 'Compare' },
   { href: '/how-it-works', label: 'How it works' },
@@ -20,6 +20,12 @@ const links = [
 export function SiteNav({ session }: { session: SessionInfo }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  // About is for guests only — hide after login
+  const links = useMemo(
+    () => (session ? baseLinks.filter((l) => l.href !== '/about') : baseLinks),
+    [session]
+  );
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + '/');
@@ -66,18 +72,16 @@ export function SiteNav({ session }: { session: SessionInfo }) {
                   Admin
                 </Link>
               )}
-              <form action="/api/auth/logout" method="POST">
-                <button
-                  type="button"
-                  className="rounded-lg px-3 py-2 text-sm text-ink-400 hover:text-white"
-                  onClick={async () => {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                    window.location.href = '/';
-                  }}
-                >
-                  Log out
-                </button>
-              </form>
+              <button
+                type="button"
+                className="rounded-lg px-3 py-2 text-sm text-ink-400 hover:text-white"
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/';
+                }}
+              >
+                Log out
+              </button>
             </>
           ) : (
             <>
