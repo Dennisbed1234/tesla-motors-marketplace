@@ -17,8 +17,8 @@ export async function notifyAdmins(opts: {
         type: opts.type,
         title: opts.title,
         body: opts.body,
-        href: opts.href || null,
-        meta: opts.meta ?? Prisma.JsonNull,
+        href: opts.href ?? null,
+        ...(opts.meta !== undefined ? { meta: opts.meta } : {}),
       },
     })
     .catch((e) => console.error('AdminNotification create failed', e));
