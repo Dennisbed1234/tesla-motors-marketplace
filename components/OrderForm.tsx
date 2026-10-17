@@ -16,6 +16,21 @@ type Addr = {
   country: string;
 };
 
+const emptyAddr = (): Addr => ({
+  line1: '',
+  line2: '',
+  city: '',
+  state: '',
+  postal: '',
+  country: '',
+});
+
+function isCompleteAddr(a: Addr) {
+  return Boolean(
+    a.line1?.trim() && a.city?.trim() && a.state?.trim() && a.postal?.trim() && a.country?.trim()
+  );
+}
+
 export function OrderForm({
   vehicleId,
   currency,
@@ -32,7 +47,7 @@ export function OrderForm({
   twentyFive: number;
   profileAddress: Addr;
 }) {
-  const hasProfile = Boolean(profileAddress.line1 && profileAddress.city);
+  const hasProfile = isCompleteAddr(profileAddress);
   const [plan, setPlan] = useState<Plan>('DEPOSIT_25');
   const [method, setMethod] = useState<PayMethod>('CARD');
   const [notes, setNotes] = useState('');
@@ -40,19 +55,17 @@ export function OrderForm({
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
-  const [billing, setBilling] = useState<Addr>({ ...profileAddress });
+  const [billing, setBilling] = useState<Addr>(
+    hasProfile ? { ...profileAddress } : emptyAddr()
+  );
   const [deliveryMode, setDeliveryMode] = useState<'PROFILE' | 'NEW'>(hasProfile ? 'PROFILE' : 'NEW');
-  const [delivery, setDelivery] = useState<Addr>({ ...profileAddress });
+  const [delivery, setDelivery] = useState<Addr>(emptyAddr());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
   const amount =
     plan === 'FULL' ? full : plan === 'DEPOSIT_50' ? fifty : twentyFive;
-
-  function addrValid(a: Addr) {
-    return a.line1.trim() && a.city.trim() && a.state.trim() && a.postal.trim() && a.country.trim();
-  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -81,22 +94,21 @@ export function OrderForm({
         setLoading(false);
         return;
       }
-      if (!addrValid(billing)) {
-        setError('Complete billing address');
+      if (!isCompleteAddr(billing)) {
+        setError('Complete billing address (street, city, state, ZIP, country)');
         setLoading(false);
         return;
       }
     }
 
-    // Required for Card, Crypto, and Wire
     const ship = deliveryMode === 'PROFILE' && hasProfile ? profileAddress : delivery;
     if (deliveryMode === 'PROFILE' && !hasProfile) {
-      setError('No address on file — choose a new delivery address');
+      setError('No complete address on file — enter a new delivery address');
       setLoading(false);
       return;
     }
-    if (!addrValid(ship)) {
-      setError('Choose delivery: address on file or enter a new mailing address');
+    if (!isCompleteAddr(ship)) {
+      setError('Please fill street, city, state, ZIP, and country for delivery');
       setLoading(false);
       return;
     }
@@ -152,31 +164,70 @@ export function OrderForm({
   }) {
     return (
       <div className="space-y-3">
-        <input
-          className="input"
-          placeholder="Street address"
-          value={value.line1}
-          onChange={(e) => onChange({ ...value, line1: e.target.value })}
-          required
-        />
-        <input
-          className="input"
-          placeholder="Apt / suite (optional)"
-          value={value.line2}
-          onChange={(e) => onChange({ ...value, line2: e.target.value })}
-        />
-        <div className="grid gap-3 sm:grid-cols-3">
-          <input className="input" placeholder="City" value={value.city} onChange={(e) => onChange({ ...value, city: e.target.value })} required />
-          <input className="input" placeholder="State" value={value.state} onChange={(e) => onChange({ ...value, state: e.target.value })} required />
-          <input className="input" placeholder="ZIP" value={value.postal} onChange={(e) => onChange({ ...value, postal: e.target.value })} required />
+        <div>
+          <label className="label">Street address</label>
+          <input
+            className="input"
+            autoComplete="street-address"
+            value={value.line1}
+            onChange={(e) => onChange({ ...value, line1: e.target.value })}
+            required
+          />
         </div>
-        <input className="input" placeholder="Country" value={value.country} onChange={(e) => onChange({ ...value, country: e.target.value })} required />
+        <div>
+          <label className="label">Apt / suite (optional)</label>
+          <input
+            className="input"
+            value={value.line2}
+            onChange={(e) => onChange({ ...value, line2: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="label">City</label>
+          <input
+            className="input"
+            autoComplete="address-level2"
+            value={value.city}
+            onChange={(e) => onChange({ ...value, city: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <label className="label">State / region</label>
+          <input
+            className="input"
+            autoComplete="address-level1"
+            value={value.state}
+            onChange={(e) => onChange({ ...value, state: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <label className="label">ZIP / postal code</label>
+          <input
+            className="input"
+            autoComplete="postal-code"
+            value={value.postal}
+            onChange={(e) => onChange({ ...value, postal: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <label className="label">Country</label>
+          <input
+            className="input"
+            autoComplete="country-name"
+            value={value.country}
+            onChange={(e) => onChange({ ...value, country: e.target.value })}
+            required
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-6">
+    <form onSubmit={onSubmit} className="mt-8 space-y-6 pb-8">
       <div>
         <h2 className="text-lg font-semibold">Amount</h2>
         <div className="mt-3 space-y-3">
@@ -198,37 +249,54 @@ export function OrderForm({
         </div>
       </div>
 
-      {/* Delivery required for every payment method including card & crypto */}
-      <div className="card space-y-3 border-white/20 p-5">
+      <div className="card space-y-4 border-white/20 p-5">
         <h2 className="text-lg font-semibold">Delivery address</h2>
         <p className="text-xs text-ink-400">
-          Required for card, crypto, and wire. Choose the address on your account or enter a new mailing address.
+          Required. Use the address on your account, or enter a new mailing address below.
         </p>
-        <label className="flex items-start gap-2 text-sm">
+
+        <label className="flex items-start gap-3 rounded-xl border border-white/10 p-3 text-sm">
           <input
             type="radio"
             className="mt-1"
+            name="deliveryMode"
             checked={deliveryMode === 'PROFILE'}
             onChange={() => setDeliveryMode('PROFILE')}
             disabled={!hasProfile}
           />
-          <span>
-            Use address on file
+          <span className="flex-1">
+            <span className="font-medium">Use address on file</span>
             {hasProfile ? (
-              <span className="mt-1 block text-xs text-ink-400">
+              <span className="mt-1 block text-xs leading-relaxed text-ink-400">
                 {profileAddress.line1}
-                {profileAddress.line2 ? `, ${profileAddress.line2}` : ''}, {profileAddress.city},{' '}
-                {profileAddress.state} {profileAddress.postal}, {profileAddress.country}
+                {profileAddress.line2 ? `, ${profileAddress.line2}` : ''}
+                <br />
+                {profileAddress.city}, {profileAddress.state} {profileAddress.postal}
+                <br />
+                {profileAddress.country}
               </span>
             ) : (
-              <span className="mt-1 block text-xs text-amber-300">No address on file — select new address below</span>
+              <span className="mt-1 block text-xs text-amber-300">
+                No complete address on file yet. Choose “new mailing address”.
+              </span>
             )}
           </span>
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="radio" checked={deliveryMode === 'NEW'} onChange={() => setDeliveryMode('NEW')} />
-          Enter a new mailing address
+
+        <label className="flex items-start gap-3 rounded-xl border border-white/10 p-3 text-sm">
+          <input
+            type="radio"
+            className="mt-1"
+            name="deliveryMode"
+            checked={deliveryMode === 'NEW'}
+            onChange={() => {
+              setDeliveryMode('NEW');
+              setDelivery(emptyAddr());
+            }}
+          />
+          <span className="font-medium">Enter a new mailing address</span>
         </label>
+
         {deliveryMode === 'NEW' && <AddrFields value={delivery} onChange={setDelivery} />}
       </div>
 
@@ -259,11 +327,23 @@ export function OrderForm({
       {method === 'CARD' && (
         <div className="card space-y-4 p-5">
           <p className="text-sm font-medium">Credit / Debit card</p>
-          <input className="input" placeholder="Name on card" value={cardName} onChange={(e) => setCardName(e.target.value)} required />
-          <input className="input font-mono" placeholder="Card number" inputMode="numeric" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} required />
+          <div>
+            <label className="label">Name on card</label>
+            <input className="input" value={cardName} onChange={(e) => setCardName(e.target.value)} required />
+          </div>
+          <div>
+            <label className="label">Card number</label>
+            <input className="input font-mono" inputMode="numeric" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} required />
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <input className="input" placeholder="MM/YY" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} required />
-            <input className="input" placeholder="CVV" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} required />
+            <div>
+              <label className="label">Expiry (MM/YY)</label>
+              <input className="input" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} required />
+            </div>
+            <div>
+              <label className="label">CVV</label>
+              <input className="input" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} required />
+            </div>
           </div>
           <div>
             <p className="mb-2 text-sm font-medium">Billing address</p>
