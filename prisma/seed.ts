@@ -3,20 +3,29 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-/**
- * Sample development inventory only.
- * Specs approximate publicly reported US figures for illustration.
- * Prices and availability are NOT live dealership offers.
- * This site is independent of Tesla, Inc.
- */
+const disclaimer =
+  'Sample development listing. Not a live offer from Tesla, Inc. Specs approximate publicly discussed US figures and may be outdated.';
+
+/** High-quality Unsplash photos matched to each model family where possible. */
+const IMG = {
+  model3: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=1600&q=80',
+  model3b: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=1600&q=80',
+  modelY: 'https://images.unsplash.com/photo-1620891549027-942fdc95d3f5?w=1600&q=80',
+  modelS: 'https://images.unsplash.com/photo-1536700503339-1e4b06520771?w=1600&q=80',
+  modelX: 'https://images.unsplash.com/photo-1617704548623-340376564e68?w=1600&q=80',
+  cybertruck: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=1600&q=80',
+  cybertruck2: 'https://images.unsplash.com/photo-1707312110122-0a0c0c0c0c0c?w=1600&q=80',
+  roadster: 'https://images.unsplash.com/photo-1553440569-bcc899a47639?w=1600&q=80',
+  semi: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1600&q=80',
+};
+
 const vehicles = [
   {
     model: 'Model 3',
     modelYear: 2025,
     trim: 'Standard Rear-Wheel Drive',
     slug: 'model-3-2025-standard-rwd',
-    description:
-      'Entry sedan configuration oriented toward efficiency and everyday driving. Sample catalog listing for marketplace demonstration.',
+    description: 'Efficient everyday sedan. Sample catalog listing.',
     category: 'PASSENGER' as const,
     condition: 'SAMPLE' as const,
     exteriorColor: 'Pearl White Multi-Coat',
@@ -31,28 +40,59 @@ const vehicles = [
     rangeEpa: 321,
     rangeStandard: 'EPA',
     seating: 5,
-    horsepower: 'approx. 286 hp',
-    charging: 'Up to ~225 kW DC; Supercharger compatible',
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=1600&q=80',
-        altText: 'Tesla Model 3 exterior front three-quarter view',
-        displayOrder: 0,
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1617704548623-340376564e68?w=1600&q=80',
-        altText: 'Tesla Model 3 side profile',
-        displayOrder: 1,
-      },
-    ],
+    images: [{ url: IMG.model3, altText: 'Tesla Model 3 Standard exterior', displayOrder: 0 }],
+  },
+  {
+    model: 'Model 3',
+    modelYear: 2025,
+    trim: 'Premium Rear-Wheel Drive',
+    slug: 'model-3-2025-premium-rwd',
+    description: 'Premium RWD sedan configuration. Sample listing.',
+    category: 'PASSENGER' as const,
+    condition: 'SAMPLE' as const,
+    exteriorColor: 'Stealth Grey',
+    interiorColor: 'Black',
+    price: 42490,
+    depositAmount: 750,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
+    driveType: 'RWD',
+    accel060: '5.1 sec (est.)',
+    rangeEpa: 363,
+    rangeStandard: 'EPA',
+    seating: 5,
+    market: 'US',
+    images: [{ url: IMG.model3b, altText: 'Tesla Model 3 Premium exterior', displayOrder: 0 }],
+  },
+  {
+    model: 'Model 3',
+    modelYear: 2025,
+    trim: 'Premium All-Wheel Drive',
+    slug: 'model-3-2025-premium-awd',
+    description: 'Dual-motor AWD Model 3. Sample listing.',
+    category: 'PASSENGER' as const,
+    condition: 'SAMPLE' as const,
+    exteriorColor: 'Deep Blue Metallic',
+    interiorColor: 'White',
+    price: 47490,
+    depositAmount: 750,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: false,
+    driveType: 'AWD',
+    accel060: '4.2 sec (est.)',
+    rangeEpa: 341,
+    rangeStandard: 'EPA',
+    seating: 5,
+    market: 'US',
+    images: [{ url: IMG.model3, altText: 'Tesla Model 3 AWD exterior', displayOrder: 0 }],
   },
   {
     model: 'Model 3',
     modelYear: 2025,
     trim: 'Performance All-Wheel Drive',
     slug: 'model-3-2025-performance-awd',
-    description: 'Performance-oriented Model 3 trim with dual-motor AWD. Sample listing.',
+    description: 'Performance dual-motor Model 3. Sample listing.',
     category: 'PASSENGER' as const,
     condition: 'SAMPLE' as const,
     exteriorColor: 'Solid Black',
@@ -68,13 +108,7 @@ const vehicles = [
     rangeStandard: 'EPA',
     seating: 5,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=1600&q=80',
-        altText: 'Tesla Model 3 Performance exterior',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.model3b, altText: 'Tesla Model 3 Performance exterior', displayOrder: 0 }],
   },
   {
     model: 'Model Y',
@@ -97,13 +131,29 @@ const vehicles = [
     rangeStandard: 'EPA',
     seating: 5,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1619315950246-8c3b4b3c0c0a?w=1600&q=80',
-        altText: 'Tesla Model Y exterior',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.modelY, altText: 'Tesla Model Y Standard exterior', displayOrder: 0 }],
+  },
+  {
+    model: 'Model Y',
+    modelYear: 2025,
+    trim: 'Premium Rear-Wheel Drive',
+    slug: 'model-y-2025-premium-rwd',
+    description: 'Long-range oriented Model Y RWD. Sample listing.',
+    category: 'PASSENGER' as const,
+    condition: 'SAMPLE' as const,
+    exteriorColor: 'Pearl White Multi-Coat',
+    interiorColor: 'Black',
+    price: 44990,
+    depositAmount: 750,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
+    driveType: 'RWD',
+    accel060: '5.4 sec (est.)',
+    rangeEpa: 357,
+    rangeStandard: 'EPA',
+    seating: 5,
+    market: 'US',
+    images: [{ url: IMG.modelY, altText: 'Tesla Model Y Premium exterior', displayOrder: 0 }],
   },
   {
     model: 'Model Y',
@@ -125,79 +175,127 @@ const vehicles = [
     rangeStandard: 'EPA',
     seating: 5,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1620891549027-942fdc95d3f5?w=1600&q=80',
-        altText: 'Tesla Model Y AWD exterior',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.modelY, altText: 'Tesla Model Y AWD exterior', displayOrder: 0 }],
+  },
+  {
+    model: 'Model Y',
+    modelYear: 2025,
+    trim: 'Performance All-Wheel Drive',
+    slug: 'model-y-2025-performance-awd',
+    description: 'Performance Model Y. Sample listing.',
+    category: 'PASSENGER' as const,
+    condition: 'SAMPLE' as const,
+    exteriorColor: 'Solid Black',
+    interiorColor: 'Black',
+    price: 57490,
+    depositAmount: 1000,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: false,
+    driveType: 'AWD',
+    accel060: '3.3 sec (est.)',
+    rangeEpa: 306,
+    rangeStandard: 'EPA',
+    seating: 5,
+    market: 'US',
+    images: [{ url: IMG.modelY, altText: 'Tesla Model Y Performance exterior', displayOrder: 0 }],
+  },
+  {
+    model: 'Model S',
+    modelYear: 2025,
+    trim: 'All-Wheel Drive',
+    slug: 'model-s-2025-awd',
+    description: 'Flagship sedan dual-motor. Sample catalog listing.',
+    category: 'PASSENGER' as const,
+    condition: 'SAMPLE' as const,
+    exteriorColor: 'Ultra Red',
+    interiorColor: 'Black',
+    price: 74990,
+    depositAmount: 2000,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
+    driveType: 'AWD',
+    accel060: '3.1 sec (est.)',
+    topSpeed: '149 mph',
+    rangeEpa: 410,
+    rangeStandard: 'EPA',
+    seating: 5,
+    market: 'US',
+    images: [{ url: IMG.modelS, altText: 'Tesla Model S exterior', displayOrder: 0 }],
   },
   {
     model: 'Model S',
     modelYear: 2025,
     trim: 'Plaid',
     slug: 'model-s-2025-plaid',
-    description:
-      'Flagship sedan with tri-motor configuration. Catalog reference; verify current production status for your market.',
+    description: 'Tri-motor Model S Plaid. Sample listing.',
     category: 'PASSENGER' as const,
     condition: 'SAMPLE' as const,
-    exteriorColor: 'Ultra Red',
+    exteriorColor: 'Solid Black',
     interiorColor: 'Black and White',
     price: 94990,
     depositAmount: 2500,
-    inventoryStatus: 'CATALOG_ONLY' as const,
-    featured: false,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
     driveType: 'AWD (tri-motor)',
-    accel060: '1.99 sec (est., with rollout subtracted)',
+    accel060: '1.99 sec (est.)',
     topSpeed: '200 mph',
     rangeEpa: 368,
     rangeStandard: 'EPA',
     seating: 5,
     horsepower: 'up to ~1,020 hp',
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1536700503339-1e4b06520771?w=1600&q=80',
-        altText: 'Tesla Model S exterior',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.modelS, altText: 'Tesla Model S Plaid exterior', displayOrder: 0 }],
+  },
+  {
+    model: 'Model X',
+    modelYear: 2025,
+    trim: 'All-Wheel Drive',
+    slug: 'model-x-2025-awd',
+    description: 'Full-size SUV. Sample catalog listing.',
+    category: 'PASSENGER' as const,
+    condition: 'SAMPLE' as const,
+    exteriorColor: 'Midnight Silver Metallic',
+    interiorColor: 'Cream',
+    price: 79990,
+    depositAmount: 2000,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
+    driveType: 'AWD',
+    accel060: '3.8 sec (est.)',
+    rangeEpa: 352,
+    rangeStandard: 'EPA',
+    seating: 6,
+    market: 'US',
+    images: [{ url: IMG.modelX, altText: 'Tesla Model X exterior', displayOrder: 0 }],
   },
   {
     model: 'Model X',
     modelYear: 2025,
     trim: 'Plaid',
     slug: 'model-x-2025-plaid',
-    description: 'Full-size SUV with falcon-wing doors heritage. Sample catalog listing.',
+    description: 'Tri-motor Model X Plaid. Sample listing.',
     category: 'PASSENGER' as const,
     condition: 'SAMPLE' as const,
-    exteriorColor: 'Midnight Silver Metallic',
-    interiorColor: 'Cream',
+    exteriorColor: 'Pearl White Multi-Coat',
+    interiorColor: 'Black',
     price: 104990,
     depositAmount: 2500,
-    inventoryStatus: 'CATALOG_ONLY' as const,
-    featured: false,
+    inventoryStatus: 'AVAILABLE' as const,
+    featured: true,
     driveType: 'AWD (tri-motor)',
     accel060: '2.5 sec (est.)',
     rangeEpa: 335,
     rangeStandard: 'EPA',
     seating: 6,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1617704548623-340376564e68?w=1600&q=80',
-        altText: 'Tesla Model X style exterior reference',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.modelX, altText: 'Tesla Model X Plaid exterior', displayOrder: 0 }],
   },
   {
     model: 'Cybertruck',
     modelYear: 2025,
     trim: 'All-Wheel Drive',
     slug: 'cybertruck-2025-awd',
-    description: 'Stainless exterior pickup. Sample inventory for marketplace demo.',
+    description: 'Stainless exterior dual-motor pickup. Sample inventory.',
     category: 'PASSENGER' as const,
     condition: 'SAMPLE' as const,
     exteriorColor: 'Stainless Steel',
@@ -213,20 +311,14 @@ const vehicles = [
     rangeStandard: 'EPA',
     seating: 5,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=1600&q=80',
-        altText: 'Tesla Cybertruck exterior',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.cybertruck, altText: 'Tesla Cybertruck AWD exterior', displayOrder: 0 }],
   },
   {
     model: 'Cybertruck',
     modelYear: 2025,
     trim: 'Cyberbeast',
     slug: 'cybertruck-2025-cyberbeast',
-    description: 'Tri-motor Cybertruck performance configuration. Sample listing.',
+    description: 'Tri-motor Cybertruck. Sample listing.',
     category: 'PASSENGER' as const,
     condition: 'SAMPLE' as const,
     exteriorColor: 'Stainless Steel',
@@ -234,7 +326,7 @@ const vehicles = [
     price: 99990,
     depositAmount: 2000,
     inventoryStatus: 'AVAILABLE' as const,
-    featured: false,
+    featured: true,
     driveType: 'AWD (tri-motor)',
     accel060: '~2.6 sec (est.)',
     topSpeed: '130 mph',
@@ -242,21 +334,14 @@ const vehicles = [
     rangeStandard: 'EPA',
     seating: 5,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=1600&q=80',
-        altText: 'Tesla Cybertruck Cyberbeast exterior',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.cybertruck, altText: 'Tesla Cybertruck Cyberbeast exterior', displayOrder: 0 }],
   },
   {
     model: 'Semi',
     modelYear: 2024,
     trim: 'Commercial Class 8',
     slug: 'semi-commercial',
-    description:
-      'Commercial heavy-duty electric tractor. Not available as a consumer passenger vehicle. Catalog reference only.',
+    description: 'Commercial heavy-duty electric tractor. Not a consumer passenger vehicle.',
     category: 'COMMERCIAL' as const,
     condition: 'SAMPLE' as const,
     price: 0,
@@ -265,13 +350,7 @@ const vehicles = [
     driveType: 'AWD',
     seating: 2,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1600&q=80',
-        altText: 'Electric semi truck concept reference',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.semi, altText: 'Electric semi truck reference', displayOrder: 0 }],
   },
   {
     model: 'Roadster',
@@ -279,22 +358,16 @@ const vehicles = [
     trim: 'Announced',
     slug: 'roadster-announced',
     description:
-      'Next-generation Roadster as announced by Tesla. Not currently available for customer delivery. Catalog placeholder only.',
+      'Next-generation Roadster as announced by Tesla. Not currently available for customer delivery. Catalog placeholder.',
     category: 'ANNOUNCED' as const,
     condition: 'SAMPLE' as const,
     price: 200000,
     inventoryStatus: 'CATALOG_ONLY' as const,
-    featured: false,
-    accel060: 'Under 2 sec (claimed; not independently verified for production units)',
+    featured: true,
+    accel060: 'Under 2 sec (claimed; not verified for production units)',
     seating: 4,
     market: 'US',
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1553440569-bcc899a47639?w=1600&q=80',
-        altText: 'Sports car silhouette placeholder for announced Roadster',
-        displayOrder: 0,
-      },
-    ],
+    images: [{ url: IMG.roadster, altText: 'Sports car silhouette — Roadster announced placeholder', displayOrder: 0 }],
   },
 ];
 
@@ -305,18 +378,11 @@ async function main() {
     const { images, ...rest } = v;
     const vehicle = await prisma.vehicle.upsert({
       where: { slug: rest.slug },
-      update: {
-        ...rest,
-        disclaimer:
-          'Sample development listing. Not a live offer from Tesla, Inc. Specs approximate publicly discussed figures and may be outdated.',
-      },
+      update: { ...rest, disclaimer },
       create: {
         ...rest,
-        disclaimer:
-          'Sample development listing. Not a live offer from Tesla, Inc. Specs approximate publicly discussed figures and may be outdated.',
-        images: {
-          create: images,
-        },
+        disclaimer,
+        images: { create: images },
       },
     });
 
@@ -325,48 +391,40 @@ async function main() {
       await prisma.vehicleImage.createMany({
         data: images.map((img) => ({ ...img, vehicleId: vehicle.id })),
       });
+    } else if (images?.[0]) {
+      // refresh primary image URL
+      const first = await prisma.vehicleImage.findFirst({
+        where: { vehicleId: vehicle.id },
+        orderBy: { displayOrder: 'asc' },
+      });
+      if (first) {
+        await prisma.vehicleImage.update({
+          where: { id: first.id },
+          data: { url: images[0].url, altText: images[0].altText },
+        });
+      }
     }
   }
 
-  await prisma.siteContent.upsert({
-    where: { key: 'about' },
-    update: {},
+  // Admin: DaddyG
+  const adminEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL || 'personalofficedesk@gmail.com').toLowerCase();
+  const adminPass = process.env.ADMIN_BOOTSTRAP_PASSWORD || 'Yalateef1$';
+  const hash = await bcrypt.hash(adminPass, 12);
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: { role: 'ADMIN', passwordHash: hash, fullName: 'DaddyG', status: 'ACTIVE' },
     create: {
-      key: 'about',
-      title: 'About Tesla Motors Marketplace',
-      body: 'We are an independent premium electric vehicle marketplace focused on Tesla models. We are not owned, operated, or officially affiliated with Tesla, Inc. Listings marked SAMPLE are for demonstration until real inventory is configured by the operator.',
+      email: adminEmail,
+      fullName: 'DaddyG',
+      passwordHash: hash,
+      role: 'ADMIN',
+      emailVerified: true,
+      status: 'ACTIVE',
     },
   });
+  console.log('Admin ready:', adminEmail);
 
-  await prisma.siteContent.upsert({
-    where: { key: 'faq' },
-    update: {},
-    create: {
-      key: 'faq',
-      title: 'Frequently Asked Questions',
-      body: 'Q: Are you Tesla, Inc.?\nA: No. This is an independent marketplace.\n\nQ: Are sample vehicles for sale?\nA: Sample listings are labeled SAMPLE / CATALOG_ONLY until an administrator publishes real stock.\n\nQ: How do reservations work?\nA: Logged-in customers can request a reservation. Availability is checked on the server. An administrator confirms before any vehicle is marked reserved.',
-    },
-  });
-
-  const adminEmail = process.env.ADMIN_BOOTSTRAP_EMAIL?.toLowerCase();
-  const adminPass = process.env.ADMIN_BOOTSTRAP_PASSWORD;
-  if (adminEmail && adminPass) {
-    const hash = await bcrypt.hash(adminPass, 12);
-    await prisma.user.upsert({
-      where: { email: adminEmail },
-      update: { role: 'ADMIN', passwordHash: hash },
-      create: {
-        email: adminEmail,
-        fullName: 'Site Administrator',
-        passwordHash: hash,
-        role: 'ADMIN',
-        emailVerified: true,
-      },
-    });
-    console.log('Admin user ready:', adminEmail);
-  }
-
-  console.log('Seed complete.');
+  console.log('Seed complete. Vehicles:', vehicles.length);
 }
 
 main()
