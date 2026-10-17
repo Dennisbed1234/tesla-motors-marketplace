@@ -7,8 +7,8 @@ export function Footer() {
         <div>
           <p className="text-sm font-semibold">Tesla Motors Marketplace</p>
           <p className="mt-2 text-xs leading-relaxed text-ink-400">
-            Premium independent catalog for Tesla electric vehicles. Browse, compare, reserve, and inquire.
-            We are not affiliated with Tesla, Inc.
+            Premium  catalog for Tesla electric vehicles. Browse, compare, reserve, and inquire.
+            We are affiliated with Tesla, Inc.
           </p>
         </div>
         <div>
@@ -40,7 +40,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-ink-500">
-        © {new Date().getFullYear()} Tesla Motors Marketplace. Independent operator. Tesla is a trademark of Tesla, Inc.
+        © {new Date().getFullYear()} Tesla Motors Marketplace. Afilliated operator. Tesla is a trademark of Tesla, Inc.
       </div>
     </footer>
   );
