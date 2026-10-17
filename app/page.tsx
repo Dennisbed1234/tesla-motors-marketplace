@@ -6,14 +6,19 @@ import { RANGE_DISCLAIMER } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const featured = await prisma.vehicle
+  // Prefer new releases (Roadster) at the top, then newest updates, then other featured
+  const allFeatured = await prisma.vehicle
     .findMany({
       where: { published: true, featured: true },
       include: { images: { orderBy: { displayOrder: 'asc' }, take: 1 } },
-      orderBy: { price: 'asc' },
-      take: 12,
+      orderBy: [{ modelYear: 'desc' }, { updatedAt: 'desc' }],
+      take: 24,
     })
     .catch(() => []);
+
+  const roadsters = allFeatured.filter((v) => v.model === 'Roadster');
+  const others = allFeatured.filter((v) => v.model !== 'Roadster');
+  const featured = [...roadsters, ...others].slice(0, 12);
 
   return (
     <>
@@ -51,7 +56,7 @@ export default async function HomePage() {
           <div>
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Featured vehicles</h2>
             <p className="mt-2 text-sm text-ink-400">
-              Browse our Tesla catalog — Model 3, Model Y, Model S, Model X, Cybertruck, Semi, and Roadster.
+              New releases first — including the 2026 Roadster lineup.
             </p>
           </div>
           <Link href="/vehicles" className="hidden text-sm text-ink-300 hover:text-white sm:inline">
