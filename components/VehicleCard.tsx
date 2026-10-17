@@ -35,11 +35,6 @@ export function VehicleCard(v: Props) {
           <div className="flex h-full items-center justify-center text-sm text-ink-500">Image unavailable</div>
         )}
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-          {v.condition === 'SAMPLE' && (
-            <span className="rounded-full bg-amber-500/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-black">
-              Sample
-            </span>
-          )}
           {v.inventoryStatus === 'AVAILABLE' && (
             <span className="rounded-full bg-emerald-500/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-black">
               Available
