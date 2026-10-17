@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { createSession, hashPassword, bootstrapAdminIfNeeded } from '@/lib/auth';
+import { notifyAdmins } from '@/lib/notify';
 
 const schema = z.object({
   fullName: z.string().min(2).max(120),
@@ -64,6 +65,25 @@ export async function POST(req: Request) {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+    });
+
+    const address = [
+      user.addressLine1,
+      user.addressLine2,
+      `${user.city}, ${user.stateRegion} ${user.postalCode}`,
+      user.country,
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    await notifyAdmins({
+      type: 'SIGNUP',
+      title: `New signup: ${user.fullName}`,
+      body: `${user.email} · ${user.phoneCountryCode} ${user.phone} · ${user.country}\n${address}`,
+      href: '/admin/users',
+      emailSubject: `[Signup] ${user.fullName} · ${user.email}`,
+      emailText: `New customer registration\n\nName: ${user.fullName}\nEmail: ${user.email}\nPhone: ${user.phoneCountryCode} ${user.phone}\nCountry: ${user.country}\nAddress: ${address}\nUser ID: ${user.id}\n`,
+      meta: { userId: user.id, email: user.email },
     });
 
     return NextResponse.json({
