@@ -11,10 +11,6 @@ export default function AboutPage() {
           Our goal is transparent listings, detailed specifications where verified, secure customer accounts, and a
           reservation workflow that checks real inventory status on the server before confirming interest.
         </p>
-        <p>
-          Development seed data is labeled SAMPLE or CATALOG ONLY and must not be treated as live stock until an
-          authorized administrator publishes real inventory.
-        </p>
       </div>
     </div>
   );
