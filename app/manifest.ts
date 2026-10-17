@@ -12,22 +12,22 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: 'portrait-primary',
     icons: [
       {
-        src: '/icons/icon-192.png',
-        sizes: '192x192',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icons/icon-512.png',
+        src: '/icon',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/icon-512.png',
+        src: '/icon',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
+      },
+      {
+        src: '/apple-icon',
+        sizes: '180x180',
+        type: 'image/png',
+        purpose: 'any',
       },
     ],
   };
