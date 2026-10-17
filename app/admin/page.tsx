@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
   const session = await getSession();
-  if (!session) redirect('/login?next=/admin');
-  if (session.role !== 'ADMIN') redirect('/account');
+  if (!session) redirect('/admin/login');
+  if (session.role !== 'ADMIN') redirect('/admin/login');
 
   const [
     vehicleCount,
@@ -62,6 +62,7 @@ export default async function AdminPage() {
         <div className="flex flex-wrap gap-2">
           <Link href="/admin/vehicles" className="btn-secondary !py-2 text-xs">Vehicles</Link>
           <Link href="/admin/users" className="btn-secondary !py-2 text-xs">Users</Link>
+          <Link href="/admin/payments" className="btn-secondary !py-2 text-xs">Payments</Link>
           <Link href="/admin/chat" className="btn-secondary !py-2 text-xs">Live chat</Link>
           <LogoutButton />
         </div>
