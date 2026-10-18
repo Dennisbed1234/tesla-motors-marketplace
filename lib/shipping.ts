@@ -30,7 +30,12 @@ export type ShippingMeta = {
 };
 
 /** Ordered shipment steps admin can set one by one. */
-export const SHIP_STEPS = [
+export const SHIP_STEPS: {
+  code: string;
+  label: string;
+  detail: string;
+  defaultLocation: string;
+}[] = [
   {
     code: 'LABEL',
     label: 'Shipping label created',
@@ -61,9 +66,14 @@ export const SHIP_STEPS = [
     detail: 'Shipment completed. Handover and paperwork finalized at the delivery address.',
     defaultLocation: 'Delivery address',
   },
-] as const;
+];
 
-export type ShipStepCode = (typeof SHIP_STEPS)[number]['code'];
+export type ShipStepCode =
+  | 'LABEL'
+  | 'PICKED_UP'
+  | 'IN_TRANSIT'
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED';
 
 export function formatDeliveryAddress(addr?: DeliveryAddress | null): string {
   if (!addr) return '';
@@ -120,7 +130,7 @@ export function applyShipStep(
   stepCode: ShipStepCode,
   now = new Date()
 ): ShippingMeta {
-  let next = ensureTrackingOnMeta(meta, now);
+  const next = ensureTrackingOnMeta(meta, now);
   const events = [...(next.shipmentEvents || [])];
   const dest = formatDeliveryAddress(next.deliveryAddress);
   const iso = now.toISOString();
@@ -131,8 +141,8 @@ export function applyShipStep(
     const step = SHIP_STEPS[i];
     if (events.some((e) => e.code === step.code)) continue;
 
-    let detail = step.detail;
-    let location = step.defaultLocation;
+    let detail: string = step.detail;
+    let location: string = step.defaultLocation;
 
     if (step.code === 'OUT_FOR_DELIVERY' && dest) {
       detail = `Out for delivery to ${dest}.`;
