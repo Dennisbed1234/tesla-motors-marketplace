@@ -22,6 +22,7 @@ const exploreGuest: NavItem[] = [
   { href: '/chat', label: 'Chat' },
   { href: '/terms', label: 'Terms & Conditions' },
   { href: '/privacy', label: 'Privacy Policy' },
+  { href: '/login', label: 'Sign in' },
 ];
 
 const exploreLoggedIn: NavItem[] = [
@@ -126,12 +127,13 @@ export function SiteNav({ session }: { session: SessionInfo }) {
                   ))}
                 </ul>
 
-                <p className="mt-6 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
-                  Account
-                </p>
-                <ul className="space-y-1">
-                  {session ? (
-                    <>
+                {/* Account section only when logged in */}
+                {session && (
+                  <>
+                    <p className="mt-6 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
+                      Account
+                    </p>
+                    <ul className="space-y-1">
                       <li>
                         <Link
                           href="/settings"
@@ -161,30 +163,9 @@ export function SiteNav({ session }: { session: SessionInfo }) {
                           Log out
                         </button>
                       </li>
-                    </>
-                  ) : (
-                    <>
-                      <li>
-                        <Link
-                          href="/login"
-                          onClick={() => setOpen(false)}
-                          className="block rounded-xl px-3 py-3.5 text-[15px] font-medium text-neutral-100 hover:bg-white/10"
-                        >
-                          Sign in
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/register"
-                          onClick={() => setOpen(false)}
-                          className="block rounded-xl px-3 py-3.5 text-[15px] font-medium text-neutral-100 hover:bg-white/10"
-                        >
-                          Get started
-                        </Link>
-                      </li>
-                    </>
-                  )}
-                </ul>
+                    </ul>
+                  </>
+                )}
               </nav>
 
               {!session && (
