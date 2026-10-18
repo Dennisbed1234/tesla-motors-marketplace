@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { notifyAdminNewChat } from '@/lib/email';
+import {
+  notifyAdminNewChat,
+  notifyUserChatReceived,
+  notifyUserChatReply,
+} from '@/lib/email';
 
 const startSchema = z.object({
   name: z.string().min(1).max(100),
@@ -26,7 +30,10 @@ export async function GET(req: Request) {
       const thread = await prisma.chatThread.findUnique({
         where: { id: threadId },
         include: {
-          messages: { orderBy: { createdAt: 'asc' }, include: { sender: { select: { fullName: true, email: true } } } },
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            include: { sender: { select: { fullName: true, email: true } } },
+          },
           user: { select: { fullName: true, email: true } },
         },
       });
@@ -61,10 +68,17 @@ export async function POST(req: Request) {
     const session = await getSession();
     const body = await req.json();
 
-    // Admin reply
+    // Admin reply → email the customer
     if (session?.role === 'ADMIN' && body.threadId && body.body && !body.email) {
       const parsed = replySchema.safeParse(body);
       if (!parsed.success) return NextResponse.json({ error: 'Invalid' }, { status: 400 });
+
+      const thread = await prisma.chatThread.findUnique({
+        where: { id: parsed.data.threadId },
+        include: { user: { select: { fullName: true, email: true } } },
+      });
+      if (!thread) return NextResponse.json({ error: 'Thread not found' }, { status: 404 });
+
       const msg = await prisma.chatMessage.create({
         data: {
           threadId: parsed.data.threadId,
@@ -77,10 +91,22 @@ export async function POST(req: Request) {
         where: { id: parsed.data.threadId },
         data: { lastMessageAt: new Date(), status: 'OPEN' },
       });
+
+      const customerEmail = thread.guestEmail || thread.user?.email || '';
+      const customerName = thread.guestName || thread.user?.fullName || 'there';
+      if (customerEmail) {
+        await notifyUserChatReply({
+          to: customerEmail,
+          name: customerName,
+          body: parsed.data.body,
+          threadId: thread.id,
+        });
+      }
+
       return NextResponse.json({ ok: true, message: msg });
     }
 
-    // Customer reply to existing thread
+    // Customer reply to existing thread → notify admin
     if (body.threadId && body.body && !body.email) {
       const parsed = replySchema.safeParse(body);
       if (!parsed.success) return NextResponse.json({ error: 'Invalid' }, { status: 400 });
@@ -98,18 +124,33 @@ export async function POST(req: Request) {
         where: { id: parsed.data.threadId },
         data: { lastMessageAt: new Date() },
       });
+
+      const guestName = thread.guestName || session?.fullName || 'Customer';
+      const guestEmail = thread.guestEmail || session?.email || '';
+
       await notifyAdminNewChat({
-        guestName: thread.guestName || session?.fullName || 'Customer',
-        guestEmail: thread.guestEmail || session?.email || '',
+        guestName,
+        guestEmail,
         body: parsed.data.body,
         threadId: thread.id,
       });
+
+      if (guestEmail) {
+        await notifyUserChatReceived({
+          to: guestEmail,
+          name: guestName,
+          body: parsed.data.body,
+        });
+      }
+
       return NextResponse.json({ ok: true, message: msg, threadId: thread.id });
     }
 
-    // Start new chat
+    // Start new chat → notify admin + confirm to user
     const parsed = startSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ error: 'Name, email, and message required' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Name, email, and message required' }, { status: 400 });
+    }
 
     const thread = await prisma.chatThread.create({
       data: {
@@ -132,6 +173,12 @@ export async function POST(req: Request) {
       guestEmail: parsed.data.email,
       body: parsed.data.body,
       threadId: thread.id,
+    });
+
+    await notifyUserChatReceived({
+      to: parsed.data.email,
+      name: parsed.data.name,
+      body: parsed.data.body,
     });
 
     return NextResponse.json({ ok: true, threadId: thread.id });
