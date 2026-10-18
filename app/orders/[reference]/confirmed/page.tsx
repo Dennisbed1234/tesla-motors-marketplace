@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth';
 import { formatMoney } from '@/lib/utils';
 import { DEFAULT_PAYMENT_METHODS, PAYMENT_METHODS_KEY, type PaymentMethodsConfig } from '@/lib/payments';
 import { PaymentInstructions } from '@/components/PaymentInstructions';
+import { ReportPaymentButton } from '@/components/ReportPaymentButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +44,7 @@ export default async function OrderConfirmedPage({
     amountDue?: number;
     planLabel?: string;
     paymentMethod?: string;
+    paymentReportedAt?: string;
   } = {};
   try {
     planMeta = order.internalNotes ? JSON.parse(order.internalNotes) : {};
@@ -69,6 +71,12 @@ export default async function OrderConfirmedPage({
       : '/images/roadster.png');
 
   const description = cleanDescription(order.vehicle.description);
+  const alreadyPaid =
+    order.paymentStatus === 'PAID' ||
+    order.orderStatus === 'PAID' ||
+    order.orderStatus === 'PROCESSING' ||
+    order.orderStatus === 'DELIVERED';
+  const alreadyReported = order.paymentStatus === 'PENDING' || Boolean(planMeta.paymentReportedAt);
 
   return (
     <div className="min-h-[80vh] bg-white text-ink-950">
@@ -127,7 +135,7 @@ export default async function OrderConfirmedPage({
               <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Next payment</p>
               <p className="mt-1 text-base">
                 {planMeta.paymentPlan === 'FULL'
-                  ? 'None — full amount selected'
+                  ? 'None: full amount selected'
                   : formatMoney(price - amountDue, order.currency) + ' before delivery'}
               </p>
             </div>
@@ -142,9 +150,21 @@ export default async function OrderConfirmedPage({
           />
         </div>
 
+        <div className="mt-8">
+          <ReportPaymentButton
+            reference={order.reference}
+            alreadyReported={alreadyReported}
+            alreadyPaid={alreadyPaid}
+          />
+        </div>
+
         <div className="mt-10 flex flex-col items-center gap-3 border-t border-ink-100 pt-8 sm:flex-row sm:justify-between">
           <p className="text-sm text-ink-500">
-            Include your order number ({order.reference}) with any transfer.
+            Include your order number ({order.reference}) with any transfer. Track anytime at{' '}
+            <Link href={`/delivery?order=${order.reference}`} className="underline">
+              Track & ship
+            </Link>
+            .
           </p>
           <Link
             href="/account"
