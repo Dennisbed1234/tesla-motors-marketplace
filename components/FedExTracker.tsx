@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { FormEvent, useState } from 'react';
 
 export function FedExTracker() {
@@ -21,18 +20,17 @@ export function FedExTracker() {
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-ink-900 to-ink-950">
       <div className="border-b border-white/10 bg-white px-5 py-5 sm:px-6">
         <div className="flex flex-wrap items-center gap-4">
-          {/* Official FedEx wordmark — no letter gap */}
-          <Image
-            src="/images/fedex-logo.jpg"
+          {/* Official FedEx wordmark — single mark, no "Fed Ex" gap */}
+          <img
+            src="/images/fedex-logo.svg"
             alt="FedEx"
             width={160}
-            height={48}
-            className="h-10 w-auto object-contain object-left sm:h-12"
-            priority
+            height={40}
+            className="h-10 w-auto object-contain object-left sm:h-11"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-ink-950">Official FedEx tracking</p>
-            <p className="text-xs text-ink-600">
+            <p className="text-sm font-semibold text-black">Official FedEx tracking</p>
+            <p className="text-xs text-neutral-600">
               Enter the tracking number from your delivery email — opens FedEx.com
             </p>
           </div>
