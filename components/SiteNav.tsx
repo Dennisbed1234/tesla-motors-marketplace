@@ -30,9 +30,6 @@ const exploreLoggedIn: NavItem[] = [
   { href: '/delivery', label: 'Track & ship' },
   { href: '/chat', label: 'Chat' },
   { href: '/account', label: 'Account' },
-  { href: '/settings', label: 'Settings' },
-  { href: '/how-it-works', label: 'How it works' },
-  { href: '/faq', label: 'FAQ' },
 ];
 
 export function SiteNav({ session }: { session: SessionInfo }) {
