@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatMoney } from '@/lib/utils';
+import { parseOrderMeta } from '@/lib/shipping';
 import { LogoutButton } from '@/components/LogoutButton';
 
 export const dynamic = 'force-dynamic';
@@ -95,25 +96,55 @@ export default async function AccountPage() {
           <p className="mt-3 text-sm text-ink-400">No orders yet.</p>
         ) : (
           <ul className="mt-4 space-y-3">
-            {orders.map((o) => (
-              <li key={o.id}>
-                <Link
-                  href={`/delivery?order=${encodeURIComponent(o.reference)}`}
-                  className="card block p-4 transition hover:border-white/25"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+            {orders.map((o) => {
+              const meta = parseOrderMeta(o.internalNotes);
+              const track = meta.carrierTracking;
+              return (
+                <li key={o.id} className="card p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-mono font-medium">{o.reference}</p>
                       <p className="mt-1 text-xs text-ink-400">
                         {o.vehicle.model} · {friendlyStatus(o.orderStatus)} ·{' '}
                         {formatMoney(Number(o.sellingPrice))}
                       </p>
+                      {track ? (
+                        <p className="mt-2 text-xs text-emerald-300">
+                          Shipment tracking:{' '}
+                          <span className="font-mono font-semibold">{track}</span>
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-xs text-ink-500">
+                          Tracking number appears after payment is confirmed.
+                        </p>
+                      )}
                     </div>
-                    <span className="text-xs font-medium text-emerald-300">Track →</span>
+                    <div className="flex flex-col items-end gap-2">
+                      <Link
+                        href={`/delivery?order=${encodeURIComponent(o.reference)}`}
+                        className="text-xs font-medium text-emerald-300 hover:underline"
+                      >
+                        Track order →
+                      </Link>
+                      {track && (
+                        <Link
+                          href={`/delivery#shipment`}
+                          className="text-[11px] text-ink-400 underline"
+                        >
+                          Track shipment
+                        </Link>
+                      )}
+                      <Link
+                        href={`/orders/${encodeURIComponent(o.reference)}/confirmed`}
+                        className="text-[11px] text-ink-400 underline"
+                      >
+                        Order details
+                      </Link>
+                    </div>
                   </div>
-                </Link>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

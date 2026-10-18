@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { formatMoney } from '@/lib/utils';
 import { DEFAULT_PAYMENT_METHODS, PAYMENT_METHODS_KEY, type PaymentMethodsConfig } from '@/lib/payments';
+import { parseOrderMeta } from '@/lib/shipping';
 import { PaymentInstructions } from '@/components/PaymentInstructions';
 import { ReportPaymentButton } from '@/components/ReportPaymentButton';
 
@@ -51,6 +52,9 @@ export default async function OrderConfirmedPage({
   } catch {
     planMeta = {};
   }
+
+  const shipMeta = parseOrderMeta(order.internalNotes);
+  const trackingNumber = shipMeta.carrierTracking || null;
 
   let payConfig: PaymentMethodsConfig = DEFAULT_PAYMENT_METHODS;
   try {
@@ -138,6 +142,23 @@ export default async function OrderConfirmedPage({
                   ? 'None: full amount selected'
                   : formatMoney(price - amountDue, order.currency) + ' before delivery'}
               </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
+                Shipment tracking
+              </p>
+              {trackingNumber ? (
+                <>
+                  <p className="mt-1 font-mono text-base font-semibold">{trackingNumber}</p>
+                  <p className="mt-1 text-xs text-ink-500">
+                    Use this number in Track &amp; ship (shipment box) to see movement.
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1 text-sm text-ink-600">
+                  Available after our team confirms your payment.
+                </p>
+              )}
             </div>
           </div>
         </div>

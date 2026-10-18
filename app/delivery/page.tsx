@@ -14,6 +14,9 @@ export default function DeliveryPage() {
           Tesla Motors Marketplace ships and delivers internationally. From the moment you place an
           order to the day your vehicle arrives, track every step with your{' '}
           <strong className="font-semibold text-white">order number</strong>, from start to finish.
+          After payment is confirmed you also receive a{' '}
+          <strong className="font-semibold text-white">shipment tracking number</strong> for detailed
+          movement updates.
         </p>
         <ul className="mt-4 grid gap-2 text-sm text-ink-400 sm:grid-cols-2">
           <li className="flex gap-2">
@@ -23,7 +26,7 @@ export default function DeliveryPage() {
             <span className="text-emerald-400">✓</span> Live status by order number
           </li>
           <li className="flex gap-2">
-            <span className="text-emerald-400">✓</span> FedEx / carrier tracking when shipped
+            <span className="text-emerald-400">✓</span> Shipment tracking after payment confirmed
           </li>
           <li className="flex gap-2">
             <span className="text-emerald-400">✓</span> Delivery or collection options
@@ -37,7 +40,7 @@ export default function DeliveryPage() {
         </Suspense>
       </div>
 
-      <div className="mt-10">
+      <div id="shipment" className="mt-10 scroll-mt-24">
         <FedExTracker />
       </div>
 
@@ -54,8 +57,8 @@ export default function DeliveryPage() {
               d: 'Enter ORD-… above, or open Track from any order on your account, to see payment, preparation, in-transit, and delivered status.',
             },
             {
-              t: 'Carrier updates',
-              d: 'When your vehicle is with FedEx or a partner carrier, use the tracking number from your email for shipment-level detail.',
+              t: 'Shipment tracking number',
+              d: 'After payment is confirmed, a tracking number is issued. Enter it in the shipment box to see pickup, transit, and delivery scans.',
             },
             {
               t: 'Inspection & handover',
