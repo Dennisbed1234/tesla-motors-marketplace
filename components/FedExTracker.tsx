@@ -2,6 +2,45 @@
 
 import { FormEvent, useState } from 'react';
 
+/** Official FedEx wordmark colors — purple #4D148C, orange #FF6600 */
+function FedExLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 200 56"
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="FedEx"
+    >
+      <title>FedEx</title>
+      {/* Fed — purple */}
+      <text
+        x="4"
+        y="42"
+        fontFamily="Arial Black, Helvetica Neue, Arial, sans-serif"
+        fontWeight="900"
+        fontSize="44"
+        fill="#4D148C"
+        letterSpacing="-1.5"
+      >
+        Fed
+      </text>
+      {/* Ex — orange (classic two-tone mark) */}
+      <text
+        x="92"
+        y="42"
+        fontFamily="Arial Black, Helvetica Neue, Arial, sans-serif"
+        fontWeight="900"
+        fontSize="44"
+        fill="#FF6600"
+        letterSpacing="-1.5"
+      >
+        Ex
+      </text>
+    </svg>
+  );
+}
+
 export function FedExTracker() {
   const [tracking, setTracking] = useState('');
   const [status, setStatus] = useState<'idle' | 'looking' | 'ready'>('idle');
@@ -11,7 +50,6 @@ export function FedExTracker() {
     const code = tracking.trim();
     if (!code) return;
     setStatus('looking');
-    // Open official FedEx track page with the number prefilled
     const url = `https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(code)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
     setTimeout(() => setStatus('ready'), 600);
@@ -19,14 +57,16 @@ export function FedExTracker() {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-ink-900 to-ink-950">
-      <div className="border-b border-white/10 bg-[#4D148C]/20 px-5 py-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#4D148C] text-xs font-bold tracking-tight text-white">
-            FX
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-white">FedEx tracking</p>
-            <p className="text-xs text-ink-400">Enter the tracking number from your delivery email</p>
+      <div className="border-b border-white/10 bg-[#4D148C]/25 px-5 py-5 sm:px-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
+            <FedExLogo className="h-8 w-auto sm:h-9" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-white">Official FedEx tracking</p>
+            <p className="text-xs text-ink-300">
+              Enter the tracking number from your delivery email — opens FedEx.com
+            </p>
           </div>
         </div>
       </div>
@@ -49,11 +89,11 @@ export function FedExTracker() {
           />
         </div>
         <button type="submit" className="btn-primary w-full sm:w-auto" disabled={!tracking.trim()}>
-          {status === 'looking' ? 'Opening FedEx…' : 'Track shipment'}
+          {status === 'looking' ? 'Opening FedEx…' : 'Track on FedEx.com'}
         </button>
         {status === 'ready' && (
           <p className="text-xs text-ink-400">
-            Tracking opened in a new tab. If nothing appeared, allow pop-ups for this site or visit{' '}
+            FedEx tracking opened in a new tab. If nothing appeared, allow pop-ups or visit{' '}
             <a
               href="https://www.fedex.com/en-us/tracking.html"
               target="_blank"
@@ -73,7 +113,7 @@ export function FedExTracker() {
           {[
             { t: 'Order confirmed', d: 'Payment verified and vehicle assigned' },
             { t: 'Preparing for transport', d: 'Inspection and logistics booking' },
-            { t: 'In transit (FedEx Freight / partner)', d: 'Live updates via your tracking number' },
+            { t: 'In transit (FedEx / partner)', d: 'Live updates via your FedEx tracking number' },
             { t: 'Out for delivery', d: 'Final mile to your address or collection point' },
             { t: 'Delivered', d: 'Handover, paperwork, and keys' },
           ].map((step, i) => (
