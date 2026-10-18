@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { createSession, verifyPassword, bootstrapAdminIfNeeded } from '@/lib/auth';
+import { verifyPassword, bootstrapAdminIfNeeded } from '@/lib/auth';
+import { issueEmailCode } from '@/lib/otp';
 
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
+/** Step 1: verify password, send email code — no session yet. */
 export async function POST(req: Request) {
   try {
     await bootstrapAdminIfNeeded();
@@ -28,16 +30,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    await createSession({
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-    });
+    const issued = await issueEmailCode(user.id, user.email, 'login');
 
     return NextResponse.json({
       ok: true,
-      user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role },
+      requiresCode: true,
+      email: user.email,
+      message: issued.emailed
+        ? 'We sent a 6-digit code to your email. Enter it to finish signing in.'
+        : 'Enter the verification code (email not configured — see devCode).',
+      devCode: issued.devCode,
     });
   } catch (e) {
     console.error(e);
