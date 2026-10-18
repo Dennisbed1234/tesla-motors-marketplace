@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { formatMoney } from '@/lib/utils';
 import { DEFAULT_PAYMENT_METHODS, PAYMENT_METHODS_KEY, type PaymentMethodsConfig } from '@/lib/payments';
-import { parseOrderMeta } from '@/lib/shipping';
+import { parseOrderMeta, formatDeliveryAddress } from '@/lib/shipping';
 import { PaymentInstructions } from '@/components/PaymentInstructions';
 import { ReportPaymentButton } from '@/components/ReportPaymentButton';
 
@@ -55,6 +55,7 @@ export default async function OrderConfirmedPage({
 
   const shipMeta = parseOrderMeta(order.internalNotes);
   const trackingNumber = shipMeta.carrierTracking || null;
+  const deliveryLine = formatDeliveryAddress(shipMeta.deliveryAddress);
 
   let payConfig: PaymentMethodsConfig = DEFAULT_PAYMENT_METHODS;
   try {
@@ -79,7 +80,8 @@ export default async function OrderConfirmedPage({
     order.paymentStatus === 'PAID' ||
     order.orderStatus === 'PAID' ||
     order.orderStatus === 'PROCESSING' ||
-    order.orderStatus === 'DELIVERED';
+    order.orderStatus === 'DELIVERED' ||
+    order.orderStatus === 'COLLECTED';
   const alreadyReported = order.paymentStatus === 'PENDING' || Boolean(planMeta.paymentReportedAt);
 
   return (
@@ -126,23 +128,29 @@ export default async function OrderConfirmedPage({
               <p className="mt-1 text-base">{formatMoney(price, order.currency)}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Payment selected</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Payment</p>
               <p className="mt-1 text-base">
-                {planMeta.planLabel || 'Down payment'} ·{' '}
-                <span className="font-semibold">{formatMoney(amountDue, order.currency)}</span>
+                {alreadyPaid ? (
+                  <span className="font-semibold text-emerald-700">Paid / confirmed</span>
+                ) : (
+                  <>
+                    {planMeta.planLabel || 'Down payment'} ·{' '}
+                    <span className="font-semibold">{formatMoney(amountDue, order.currency)}</span>
+                  </>
+                )}
               </p>
               <p className="mt-1 text-xs text-ink-500">
                 Status: {order.paymentStatus} · {order.createdAt.toLocaleDateString()}
               </p>
             </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Next payment</p>
-              <p className="mt-1 text-base">
-                {planMeta.paymentPlan === 'FULL'
-                  ? 'None: full amount selected'
-                  : formatMoney(price - amountDue, order.currency) + ' before delivery'}
-              </p>
-            </div>
+            {deliveryLine && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
+                  Delivery address
+                </p>
+                <p className="mt-1 text-sm text-ink-700">{deliveryLine}</p>
+              </div>
+            )}
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">
                 Shipment tracking
@@ -151,7 +159,7 @@ export default async function OrderConfirmedPage({
                 <>
                   <p className="mt-1 font-mono text-base font-semibold">{trackingNumber}</p>
                   <p className="mt-1 text-xs text-ink-500">
-                    Use this number in Track &amp; ship (shipment box) to see movement.
+                    Use this number under Track &amp; ship to see movement steps.
                   </p>
                 </>
               ) : (
@@ -163,29 +171,48 @@ export default async function OrderConfirmedPage({
           </div>
         </div>
 
-        <div className="border-t border-ink-100 pt-2">
-          <PaymentInstructions
-            config={payConfig}
-            amountLabel={formatMoney(amountDue, order.currency)}
-            preferredMethod={preferredMethod}
-          />
-        </div>
+        {/* Payment methods only while still unpaid */}
+        {!alreadyPaid && (
+          <>
+            <div className="border-t border-ink-100 pt-2">
+              <PaymentInstructions
+                config={payConfig}
+                amountLabel={formatMoney(amountDue, order.currency)}
+                preferredMethod={preferredMethod}
+              />
+            </div>
+            <div className="mt-8">
+              <ReportPaymentButton
+                reference={order.reference}
+                alreadyReported={alreadyReported}
+                alreadyPaid={false}
+              />
+            </div>
+          </>
+        )}
 
-        <div className="mt-8">
-          <ReportPaymentButton
-            reference={order.reference}
-            alreadyReported={alreadyReported}
-            alreadyPaid={alreadyPaid}
-          />
-        </div>
+        {alreadyPaid && (
+          <div className="mt-10 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            Payment is confirmed. Your shipment will update as it moves. Track with order{' '}
+            <span className="font-mono font-semibold">{order.reference}</span>
+            {trackingNumber ? (
+              <>
+                {' '}
+                or tracking <span className="font-mono font-semibold">{trackingNumber}</span>
+              </>
+            ) : null}
+            .{' '}
+            <Link href={`/delivery?order=${order.reference}`} className="underline">
+              Open tracking
+            </Link>
+          </div>
+        )}
 
         <div className="mt-10 flex flex-col items-center gap-3 border-t border-ink-100 pt-8 sm:flex-row sm:justify-between">
           <p className="text-sm text-ink-500">
-            Include your order number ({order.reference}) with any transfer. Track anytime at{' '}
             <Link href={`/delivery?order=${order.reference}`} className="underline">
               Track & ship
             </Link>
-            .
           </p>
           <Link
             href="/account"

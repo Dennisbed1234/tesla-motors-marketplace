@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatMoney } from '@/lib/utils';
-import { parseOrderMeta } from '@/lib/shipping';
+import { parseOrderMeta, formatDeliveryAddress } from '@/lib/shipping';
 import { AdminOrderActions } from '@/components/AdminOrderActions';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,7 @@ export default async function AdminOrdersPage() {
         <div>
           <h1 className="text-2xl font-semibold">Orders</h1>
           <p className="mt-1 text-sm text-ink-400">
-            Confirm payment to auto-issue a tracking number. Advance status to update shipment movement.
+            Confirm payment, then advance shipment steps. Each step appears on the customer tracking page with their delivery address.
             {needsReview > 0 ? ` ${needsReview} payment report(s) waiting.` : ''}
           </p>
         </div>
@@ -46,6 +46,8 @@ export default async function AdminOrdersPage() {
         {orders.map((o) => {
           const meta = parseOrderMeta(o.internalNotes);
           const reported = Boolean(meta.paymentReportedAt);
+          const dest = formatDeliveryAddress(meta.deliveryAddress);
+          const lastEvent = meta.shipmentEvents?.[meta.shipmentEvents.length - 1];
           return (
             <div key={o.id} className="card p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -62,9 +64,15 @@ export default async function AdminOrdersPage() {
                     {formatMoney(Number(o.sellingPrice), o.currency)} ·{' '}
                     {o.createdAt.toLocaleString()}
                   </p>
+                  {dest && (
+                    <p className="mt-2 text-xs text-ink-300">
+                      <span className="text-ink-500">Deliver to:</span> {dest}
+                    </p>
+                  )}
                   {meta.carrierTracking && (
-                    <p className="mt-2 font-mono text-xs text-emerald-300">
+                    <p className="mt-1 font-mono text-xs text-emerald-300">
                       Track: {meta.carrierTracking}
+                      {lastEvent ? ` · ${lastEvent.label}` : ''}
                     </p>
                   )}
                   {reported && o.paymentStatus === 'PENDING' && (
@@ -82,6 +90,7 @@ export default async function AdminOrdersPage() {
                 orderId={o.id}
                 orderStatus={o.orderStatus}
                 paymentStatus={o.paymentStatus}
+                carrierTracking={meta.carrierTracking}
               />
             </div>
           );

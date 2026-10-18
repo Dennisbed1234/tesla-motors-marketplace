@@ -7,6 +7,9 @@ import {
   stringifyOrderMeta,
   ensureTrackingOnMeta,
   syncShipmentEvents,
+  applyShipStep,
+  orderStatusForShipStep,
+  type ShipStepCode,
 } from '@/lib/shipping';
 
 const updateSchema = z.object({
@@ -15,10 +18,16 @@ const updateSchema = z.object({
     'CONFIRM_PAYMENT',
     'PREPARING',
     'IN_TRANSIT',
+    'OUT_FOR_DELIVERY',
     'DELIVERED',
     'COLLECTED',
     'CANCEL',
     'REFUND',
+    'SHIP_LABEL',
+    'SHIP_PICKED_UP',
+    'SHIP_IN_TRANSIT',
+    'SHIP_OUT_FOR_DELIVERY',
+    'SHIP_DELIVERED',
   ]),
 });
 
@@ -57,49 +66,66 @@ export async function PATCH(req: Request) {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    let orderStatus = order.orderStatus;
-    let paymentStatus = order.paymentStatus;
-
-    switch (action) {
-      case 'CONFIRM_PAYMENT':
-        paymentStatus = 'PAID';
-        orderStatus = 'PAID';
-        break;
-      case 'PREPARING':
-        paymentStatus = 'PAID';
-        orderStatus = 'PAID';
-        break;
-      case 'IN_TRANSIT':
-        paymentStatus = 'PAID';
-        orderStatus = 'PROCESSING';
-        break;
-      case 'DELIVERED':
-        paymentStatus = 'PAID';
-        orderStatus = 'DELIVERED';
-        break;
-      case 'COLLECTED':
-        paymentStatus = 'PAID';
-        orderStatus = 'COLLECTED';
-        break;
-      case 'CANCEL':
-        orderStatus = 'CANCELLED';
-        break;
-      case 'REFUND':
-        orderStatus = 'REFUNDED';
-        paymentStatus = 'REFUNDED';
-        break;
-    }
-
+    let orderStatus = order.orderStatus as string;
+    let paymentStatus = order.paymentStatus as string;
     let meta = parseOrderMeta(order.internalNotes);
 
-    // Auto-issue tracking number when payment is confirmed / transport starts
-    if (
-      paymentStatus === 'PAID' &&
-      orderStatus !== 'CANCELLED' &&
-      orderStatus !== 'REFUNDED'
-    ) {
-      meta = ensureTrackingOnMeta(meta);
-      meta = syncShipmentEvents(meta, orderStatus);
+    const shipMap: Record<string, ShipStepCode> = {
+      SHIP_LABEL: 'LABEL',
+      SHIP_PICKED_UP: 'PICKED_UP',
+      SHIP_IN_TRANSIT: 'IN_TRANSIT',
+      SHIP_OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+      SHIP_DELIVERED: 'DELIVERED',
+    };
+
+    if (action in shipMap) {
+      const code = shipMap[action];
+      paymentStatus = 'PAID';
+      orderStatus = orderStatusForShipStep(code);
+      meta = applyShipStep(meta, code);
+    } else {
+      switch (action) {
+        case 'CONFIRM_PAYMENT':
+          paymentStatus = 'PAID';
+          orderStatus = 'PAID';
+          meta = ensureTrackingOnMeta(meta);
+          meta = applyShipStep(meta, 'LABEL');
+          break;
+        case 'PREPARING':
+          paymentStatus = 'PAID';
+          orderStatus = 'PAID';
+          meta = applyShipStep(meta, 'PICKED_UP');
+          break;
+        case 'IN_TRANSIT':
+          paymentStatus = 'PAID';
+          orderStatus = 'PROCESSING';
+          meta = applyShipStep(meta, 'IN_TRANSIT');
+          break;
+        case 'OUT_FOR_DELIVERY':
+          paymentStatus = 'PAID';
+          orderStatus = 'PROCESSING';
+          meta = applyShipStep(meta, 'OUT_FOR_DELIVERY');
+          break;
+        case 'DELIVERED':
+          paymentStatus = 'PAID';
+          orderStatus = 'DELIVERED';
+          meta = applyShipStep(meta, 'DELIVERED');
+          break;
+        case 'COLLECTED':
+          paymentStatus = 'PAID';
+          orderStatus = 'COLLECTED';
+          meta = applyShipStep(meta, 'DELIVERED');
+          break;
+        case 'CANCEL':
+          orderStatus = 'CANCELLED';
+          break;
+        case 'REFUND':
+          orderStatus = 'REFUNDED';
+          paymentStatus = 'REFUNDED';
+          break;
+        default:
+          meta = syncShipmentEvents(meta, orderStatus);
+      }
     }
 
     const updated = await prisma.order.update({
@@ -119,6 +145,7 @@ export async function PATCH(req: Request) {
       ok: true,
       order: updated,
       carrierTracking: meta.carrierTracking || null,
+      shipmentEvents: meta.shipmentEvents || [],
     });
   } catch (e) {
     console.error(e);
