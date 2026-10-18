@@ -26,14 +26,20 @@ export default async function AdminOrdersPage() {
     (o) => o.paymentStatus === 'PENDING' && o.orderStatus === 'PENDING_PAYMENT'
   ).length;
 
+  const customerCancelled = orders.filter((o) => {
+    const m = parseOrderMeta(o.internalNotes);
+    return o.orderStatus === 'CANCELLED' && m.cancelledByCustomer;
+  }).length;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Orders</h1>
           <p className="mt-1 text-sm text-ink-400">
-            Confirm payment, then advance shipment steps. Each step appears on the customer tracking page with their delivery address.
+            Confirm payment, advance shipment steps, or permanently delete cancelled orders.
             {needsReview > 0 ? ` ${needsReview} payment report(s) waiting.` : ''}
+            {customerCancelled > 0 ? ` ${customerCancelled} customer cancel(s).` : ''}
           </p>
         </div>
         <Link href="/admin" className="text-sm text-ink-400 hover:text-white">
@@ -48,8 +54,12 @@ export default async function AdminOrdersPage() {
           const reported = Boolean(meta.paymentReportedAt);
           const dest = formatDeliveryAddress(meta.deliveryAddress);
           const lastEvent = meta.shipmentEvents?.[meta.shipmentEvents.length - 1];
+          const cancelledByCustomer = Boolean(meta.cancelledByCustomer);
           return (
-            <div key={o.id} className="card p-5">
+            <div
+              key={o.id}
+              className={`card p-5 ${o.orderStatus === 'CANCELLED' ? 'border-amber-500/30' : ''}`}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-mono text-sm font-semibold text-white">{o.reference}</p>
@@ -80,6 +90,11 @@ export default async function AdminOrdersPage() {
                       Customer reported payment
                     </p>
                   )}
+                  {cancelledByCustomer && (
+                    <p className="mt-2 inline-block rounded-full bg-red-500/20 px-2 py-0.5 text-[11px] font-medium text-red-200">
+                      Customer deleted / cancelled
+                    </p>
+                  )}
                 </div>
                 <div className="text-right text-xs text-ink-400">
                   <p>Order: {o.orderStatus}</p>
@@ -91,6 +106,7 @@ export default async function AdminOrdersPage() {
                 orderStatus={o.orderStatus}
                 paymentStatus={o.paymentStatus}
                 carrierTracking={meta.carrierTracking}
+                cancelledByCustomer={cancelledByCustomer}
               />
             </div>
           );

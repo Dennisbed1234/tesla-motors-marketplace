@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { formatMoney } from '@/lib/utils';
 import { parseOrderMeta } from '@/lib/shipping';
 import { LogoutButton } from '@/components/LogoutButton';
+import { DeleteOrderButton } from '@/components/DeleteOrderButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,10 @@ export default async function AccountPage() {
       take: 20,
     }),
     prisma.order.findMany({
-      where: { userId: session.id },
+      where: {
+        userId: session.id,
+        orderStatus: { not: 'CANCELLED' },
+      },
       include: { vehicle: true },
       orderBy: { createdAt: 'desc' },
       take: 20,
@@ -99,6 +103,8 @@ export default async function AccountPage() {
             {orders.map((o) => {
               const meta = parseOrderMeta(o.internalNotes);
               const track = meta.carrierTracking;
+              const delivered =
+                o.orderStatus === 'DELIVERED' || o.orderStatus === 'COLLECTED';
               return (
                 <li key={o.id} className="card p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -140,6 +146,7 @@ export default async function AccountPage() {
                       >
                         Order details
                       </Link>
+                      <DeleteOrderButton reference={o.reference} disabled={delivered} />
                     </div>
                   </div>
                 </li>

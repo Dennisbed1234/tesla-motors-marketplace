@@ -22,17 +22,26 @@ export function AdminOrderActions({
   orderStatus,
   paymentStatus,
   carrierTracking,
+  cancelledByCustomer,
 }: {
   orderId: string;
   orderStatus: string;
   paymentStatus: string;
   carrierTracking?: string | null;
+  cancelledByCustomer?: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   async function run(action: string) {
+    if (action === 'DELETE_PERMANENT') {
+      const ok = window.confirm(
+        'Permanently delete this order from the database? This cannot be undone.'
+      );
+      if (!ok) return;
+    }
+
     setLoading(action);
     setError('');
     try {
@@ -56,6 +65,12 @@ export function AdminOrderActions({
 
   return (
     <div className="mt-3 space-y-3">
+      {cancelledByCustomer && (
+        <p className="rounded-lg bg-amber-500/15 px-3 py-2 text-xs text-amber-100">
+          Customer requested delete/cancel. You can permanently remove this order below.
+        </p>
+      )}
+
       <div>
         <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-500">
           Payment & order
@@ -72,6 +87,14 @@ export function AdminOrderActions({
               {loading === a.action ? '…' : a.label}
             </button>
           ))}
+          <button
+            type="button"
+            disabled={loading !== null}
+            onClick={() => run('DELETE_PERMANENT')}
+            className="rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-[11px] text-red-200 hover:bg-red-500/20 disabled:opacity-50"
+          >
+            {loading === 'DELETE_PERMANENT' ? '…' : 'Delete permanently'}
+          </button>
         </div>
       </div>
 

@@ -28,6 +28,7 @@ const updateSchema = z.object({
     'SHIP_IN_TRANSIT',
     'SHIP_OUT_FOR_DELIVERY',
     'SHIP_DELIVERED',
+    'DELETE_PERMANENT',
   ]),
 });
 
@@ -65,6 +66,12 @@ export async function PATCH(req: Request) {
     const { orderId, action } = parsed.data;
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    if (action === 'DELETE_PERMANENT') {
+      await prisma.payment.deleteMany({ where: { orderId } });
+      await prisma.order.delete({ where: { id: orderId } });
+      return NextResponse.json({ ok: true, deleted: true });
+    }
 
     let orderStatus = order.orderStatus as string;
     let paymentStatus = order.paymentStatus as string;
