@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { OrderTracker } from '@/components/OrderTracker';
 import { FedExTracker } from '@/components/FedExTracker';
 
@@ -8,15 +9,15 @@ export default function DeliveryPage() {
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">Shipping &amp; delivery</h1>
 
       <div className="mt-6 rounded-2xl border border-white/15 bg-white/5 p-5 sm:p-6">
-        <p className="text-base font-semibold text-white">We deliver nationwide</p>
+        <p className="text-base font-semibold text-white">We deliver worldwide</p>
         <p className="mt-2 text-sm leading-relaxed text-ink-300">
-          Tesla Motors Marketplace delivers across all 50 U.S. states. From the moment you place an
-          order to the day your vehicle arrives, you can track progress with your{' '}
+          Tesla Motors Marketplace ships and delivers internationally. From the moment you place an
+          order to the day your vehicle arrives, track every step with your{' '}
           <strong className="font-semibold text-white">order number</strong> — start to finish.
         </p>
         <ul className="mt-4 grid gap-2 text-sm text-ink-400 sm:grid-cols-2">
           <li className="flex gap-2">
-            <span className="text-emerald-400">✓</span> All 50 states covered
+            <span className="text-emerald-400">✓</span> Worldwide delivery coverage
           </li>
           <li className="flex gap-2">
             <span className="text-emerald-400">✓</span> Live status by order number
@@ -31,7 +32,9 @@ export default function DeliveryPage() {
       </div>
 
       <div className="mt-10">
-        <OrderTracker />
+        <Suspense fallback={<p className="text-sm text-ink-400">Loading tracker…</p>}>
+          <OrderTracker />
+        </Suspense>
       </div>
 
       <div className="mt-10">
@@ -39,20 +42,20 @@ export default function DeliveryPage() {
       </div>
 
       <section className="mt-12 space-y-6">
-        <h2 className="text-lg font-semibold">How nationwide delivery works</h2>
+        <h2 className="text-lg font-semibold">How worldwide delivery works</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {[
             {
-              t: 'Order to door — anywhere in the U.S.',
-              d: 'We schedule professional transport to the delivery address on your order, in every state we serve nationwide.',
+              t: 'Order to door — worldwide',
+              d: 'We schedule professional transport to the delivery address on your order, wherever you are in the world.',
             },
             {
               t: 'Track with your order number',
-              d: 'Enter ORD-… above to see payment, preparation, in-transit, and delivered status in one timeline.',
+              d: 'Enter ORD-… above — or open Track from any order on your account — to see payment, preparation, in-transit, and delivered status.',
             },
             {
               t: 'Carrier updates',
-              d: 'When your vehicle is with FedEx Freight or a partner carrier, use the FedEx tracking number from your email for package-level detail.',
+              d: 'When your vehicle is with FedEx or a partner carrier, use the tracking number from your email for shipment-level detail.',
             },
             {
               t: 'Inspection & handover',
@@ -77,8 +80,8 @@ export default function DeliveryPage() {
           or use live chat. Have your <strong className="text-white">order number</strong> ready.
         </p>
         <p className="mt-3 text-xs text-ink-500">
-          Office: 235 East 42nd Street, New York, NY 10017 · Nationwide U.S. delivery · Affiliate
-          partner of Tesla, Inc.
+          Office: 235 East 42nd Street, New York, NY 10017 · Worldwide delivery · Affiliate partner of
+          Tesla, Inc.
         </p>
       </section>
     </div>

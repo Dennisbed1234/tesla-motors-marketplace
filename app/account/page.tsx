@@ -7,6 +7,10 @@ import { LogoutButton } from '@/components/LogoutButton';
 
 export const dynamic = 'force-dynamic';
 
+function friendlyStatus(status: string) {
+  return status.replace(/_/g, ' ');
+}
+
 export default async function AccountPage() {
   const session = await getSession();
   if (!session) redirect('/login?next=/account');
@@ -38,22 +42,42 @@ export default async function AccountPage() {
           <h1 className="text-2xl font-semibold">Welcome, {session.fullName}</h1>
           <p className="mt-1 text-sm text-ink-400">{session.email}</p>
         </div>
-        <LogoutButton />
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/delivery"
+            className="rounded-full border border-white/20 px-4 py-2 text-sm text-white hover:bg-white/10"
+          >
+            Track &amp; ship
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
 
       <section className="mt-10">
         <h2 className="text-lg font-semibold">My reservations</h2>
         {reservations.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-400">No reservations yet. <Link href="/vehicles" className="underline">Browse vehicles</Link></p>
+          <p className="mt-3 text-sm text-ink-400">
+            No reservations yet.{' '}
+            <Link href="/vehicles" className="underline">
+              Browse vehicles
+            </Link>
+          </p>
         ) : (
           <ul className="mt-4 space-y-3">
             {reservations.map((r) => (
               <li key={r.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
-                  <p className="font-medium">{r.vehicle.model} {r.vehicle.trim}</p>
-                  <p className="text-xs text-ink-400">{r.reference} · {r.status} · deposit {formatMoney(Number(r.depositAmount))}</p>
+                  <p className="font-medium">
+                    {r.vehicle.model} {r.vehicle.trim}
+                  </p>
+                  <p className="text-xs text-ink-400">
+                    {r.reference} · {friendlyStatus(r.status)} · deposit{' '}
+                    {formatMoney(Number(r.depositAmount))}
+                  </p>
                 </div>
-                <Link href={`/vehicles/${r.vehicle.slug}`} className="text-sm text-ink-300 underline">View</Link>
+                <Link href={`/vehicles/${r.vehicle.slug}`} className="text-sm text-ink-300 underline">
+                  View
+                </Link>
               </li>
             ))}
           </ul>
@@ -61,15 +85,33 @@ export default async function AccountPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold">My orders</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">My orders</h2>
+          <Link href="/delivery" className="text-sm text-ink-400 underline hover:text-white">
+            Open tracking
+          </Link>
+        </div>
         {orders.length === 0 ? (
           <p className="mt-3 text-sm text-ink-400">No orders yet.</p>
         ) : (
           <ul className="mt-4 space-y-3">
             {orders.map((o) => (
-              <li key={o.id} className="card p-4">
-                <p className="font-medium">{o.reference}</p>
-                <p className="text-xs text-ink-400">{o.vehicle.model} · {o.orderStatus} · {formatMoney(Number(o.sellingPrice))}</p>
+              <li key={o.id}>
+                <Link
+                  href={`/delivery?order=${encodeURIComponent(o.reference)}`}
+                  className="card block p-4 transition hover:border-white/25"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-mono font-medium">{o.reference}</p>
+                      <p className="mt-1 text-xs text-ink-400">
+                        {o.vehicle.model} · {friendlyStatus(o.orderStatus)} ·{' '}
+                        {formatMoney(Number(o.sellingPrice))}
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-emerald-300">Track →</span>
+                  </div>
+                </Link>
               </li>
             ))}
           </ul>

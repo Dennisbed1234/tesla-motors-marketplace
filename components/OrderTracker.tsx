@@ -1,7 +1,8 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { formatMoney } from '@/lib/utils';
 
 type Step = {
@@ -24,15 +25,16 @@ type TrackResult = {
   message: string;
 };
 
-export function OrderTracker() {
-  const [reference, setReference] = useState('');
+export function OrderTracker({ initialReference }: { initialReference?: string }) {
+  const searchParams = useSearchParams();
+  const fromUrl = searchParams.get('order') || searchParams.get('reference') || '';
+  const [reference, setReference] = useState(initialReference || fromUrl || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<TrackResult | null>(null);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    const ref = reference.trim().toUpperCase();
+  async function lookup(refRaw: string) {
+    const ref = refRaw.trim().toUpperCase();
     if (!ref) {
       setError('Enter your order number');
       return;
@@ -48,6 +50,7 @@ export function OrderTracker() {
         return;
       }
       setResult(data);
+      setReference(ref);
     } catch {
       setError('Network error — try again');
     } finally {
@@ -55,13 +58,25 @@ export function OrderTracker() {
     }
   }
 
+  useEffect(() => {
+    const seed = (initialReference || fromUrl || '').trim();
+    if (seed) {
+      void lookup(seed);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialReference, fromUrl]);
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    void lookup(reference);
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-ink-900 to-ink-950">
       <div className="border-b border-white/10 px-5 py-4 sm:px-6">
         <p className="text-sm font-semibold text-white">Track your order</p>
         <p className="mt-1 text-xs text-ink-400">
-          Use the order number from your confirmation (starts with ORD-). Follow every step from placement
-          through nationwide delivery.
+          Enter your order number (ORD-…). Follow every step from placement through worldwide delivery.
         </p>
       </div>
 
@@ -111,7 +126,7 @@ export function OrderTracker() {
           </div>
 
           <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
-            Nationwide delivery across the United States — tracked from start to finish.
+            Worldwide delivery — tracked from start to finish with your order number.
           </p>
 
           <ol className="mt-6 space-y-0">

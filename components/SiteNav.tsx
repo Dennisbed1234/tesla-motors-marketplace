@@ -9,7 +9,7 @@ type SessionInfo = {
   role: string;
 } | null;
 
-const baseLinks = [
+const guestLinks = [
   { href: '/vehicles', label: 'Vehicles' },
   { href: '/compare', label: 'Compare' },
   { href: '/how-it-works', label: 'How it works' },
@@ -21,16 +21,76 @@ export function SiteNav({ session }: { session: SessionInfo }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // About is for guests only — hide after login
-  const links = useMemo(
-    () => (session ? baseLinks.filter((l) => l.href !== '/about') : baseLinks),
-    [session]
-  );
+  const dashLinks = useMemo(() => {
+    const items = [
+      { href: '/vehicles', label: 'Vehicles' },
+      { href: '/account', label: 'Account' },
+      { href: '/delivery', label: 'Track & ship' },
+      { href: '/chat', label: 'Chat' },
+      { href: '/compare', label: 'Compare' },
+    ];
+    if (session?.role === 'ADMIN') {
+      items.push({ href: '/admin', label: 'Admin' });
+    }
+    return items;
+  }, [session?.role]);
 
   function isActive(href: string) {
+    if (href === '/delivery') {
+      return pathname === '/delivery' || pathname.startsWith('/delivery');
+    }
     return pathname === href || pathname.startsWith(href + '/');
   }
 
+  // Logged-in: horizontal dashboard strip (CryptoByt-style) — does not push page content
+  if (session) {
+    return (
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-ink-950/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-xs font-bold tracking-tight text-ink-950">
+              TM
+            </span>
+            <span className="hidden text-sm font-semibold tracking-wide text-white sm:inline">
+              Tesla Motors
+            </span>
+          </Link>
+
+          <nav
+            className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scrollbar-none"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {dashLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition sm:text-sm ${
+                  isActive(l.href)
+                    ? 'bg-white text-ink-950'
+                    : 'text-ink-300 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+
+          <button
+            type="button"
+            className="shrink-0 rounded-full border border-white/15 px-3 py-1.5 text-xs text-ink-400 hover:text-white"
+            onClick={async () => {
+              await fetch('/api/auth/logout', { method: 'POST' });
+              window.location.href = '/';
+            }}
+          >
+            Log out
+          </button>
+        </div>
+      </header>
+    );
+  }
+
+  // Guest: logo + horizontal links on desktop; compact sheet on mobile (overlay, not layout push)
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-ink-950/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -41,9 +101,8 @@ export function SiteNav({ session }: { session: SessionInfo }) {
           <span className="text-sm font-semibold tracking-wide text-white">Tesla Motors</span>
         </Link>
 
-        {/* Desktop */}
-        <nav className="hidden items-center gap-1 lg:flex">
-          {links.map((l) => (
+        <nav className="hidden items-center gap-1 md:flex">
+          {guestLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -56,49 +115,18 @@ export function SiteNav({ session }: { session: SessionInfo }) {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          {session ? (
-            <>
-              <Link
-                href="/account"
-                className={`rounded-lg px-3 py-2 text-sm ${
-                  isActive('/account') ? 'text-white' : 'text-ink-300 hover:text-white'
-                }`}
-              >
-                Account
-              </Link>
-              {session.role === 'ADMIN' && (
-                <Link href="/admin" className="rounded-lg px-3 py-2 text-sm text-accent-soft hover:text-white">
-                  Admin
-                </Link>
-              )}
-              <button
-                type="button"
-                className="rounded-lg px-3 py-2 text-sm text-ink-400 hover:text-white"
-                onClick={async () => {
-                  await fetch('/api/auth/logout', { method: 'POST' });
-                  window.location.href = '/';
-                }}
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="rounded-lg px-3 py-2 text-sm text-ink-300 hover:text-white">
-                Log in
-              </Link>
-              <Link href="/register" className="btn-primary !px-4 !py-2 text-xs">
-                Sign up
-              </Link>
-            </>
-          )}
+        <div className="hidden items-center gap-2 md:flex">
+          <Link href="/login" className="rounded-lg px-3 py-2 text-sm text-ink-300 hover:text-white">
+            Log in
+          </Link>
+          <Link href="/register" className="btn-primary !px-4 !py-2 text-xs">
+            Sign up
+          </Link>
         </div>
 
-        {/* Mobile toggle */}
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white lg:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white md:hidden"
           aria-label={open ? 'Close menu' : 'Open menu'}
           onClick={() => setOpen((v) => !v)}
         >
@@ -114,64 +142,47 @@ export function SiteNav({ session }: { session: SessionInfo }) {
         </button>
       </div>
 
-      {/* Mobile panel */}
+      {/* Overlay menu — fixed, does not push page content down */}
       {open && (
-        <div className="border-t border-white/10 bg-ink-950 px-4 py-4 lg:hidden">
-          <nav className="flex flex-col gap-1">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={`rounded-xl px-3 py-3 text-sm ${
-                  isActive(l.href) ? 'bg-white/10 text-white' : 'text-ink-200'
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
-            {session ? (
-              <>
-                <Link href="/account" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-ink-200">
-                  Account
-                </Link>
-                {session.role === 'ADMIN' && (
-                  <Link href="/admin" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-accent-soft">
-                    Admin
-                  </Link>
-                )}
-                <button
-                  type="button"
-                  className="rounded-xl px-3 py-3 text-left text-sm text-ink-400"
-                  onClick={async () => {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                    window.location.href = '/';
-                  }}
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm text-ink-200">
-                  Log in
-                </Link>
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            aria-label="Close menu"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute left-0 right-0 top-full z-50 border-b border-white/10 bg-ink-950 px-4 py-3 shadow-xl md:hidden">
+            <nav className="flex flex-wrap gap-2">
+              {guestLinks.map((l) => (
                 <Link
-                  href="/register"
+                  key={l.href}
+                  href={l.href}
                   onClick={() => setOpen(false)}
-                  className="btn-primary mt-2 w-full text-center text-sm"
+                  className={`rounded-full px-3.5 py-2 text-sm ${
+                    isActive(l.href) ? 'bg-white text-ink-950' : 'bg-white/5 text-ink-200'
+                  }`}
                 >
-                  Sign up
+                  {l.label}
                 </Link>
-              </>
-            )}
-          </nav>
-        </div>
+              ))}
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="rounded-full bg-white/5 px-3.5 py-2 text-sm text-ink-200"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setOpen(false)}
+                className="rounded-full bg-white px-3.5 py-2 text-sm font-medium text-ink-950"
+              >
+                Sign up
+              </Link>
+            </nav>
+          </div>
+        </>
       )}
-
-      <p className="border-t border-white/5 bg-ink-900/40 px-4 py-1.5 text-center text-[10px] text-ink-500 sm:text-xs">
-        Premium electric vehicle marketplace · New York, NY
-      </p>
     </header>
   );
 }

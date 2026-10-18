@@ -45,9 +45,8 @@ export async function GET(req: NextRequest) {
       currency: order.currency,
       sellingPrice: order.sellingPrice.toString(),
       steps,
-      nationwide: true,
       message:
-        'We deliver nationwide across the United States. Your order is tracked from placement through delivery.',
+        'We deliver worldwide. Your order is tracked from placement through delivery.',
     });
   } catch (e) {
     console.error('Order track failed', e);
@@ -55,11 +54,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-function buildTimeline(
-  orderStatus: string,
-  paymentStatus: string,
-  createdAt: Date
-) {
+function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Date) {
   const paid =
     paymentStatus === 'PAID' ||
     orderStatus === 'PAID' ||
@@ -68,14 +63,12 @@ function buildTimeline(
     orderStatus === 'COLLECTED';
 
   const processing =
-    orderStatus === 'PROCESSING' ||
-    orderStatus === 'DELIVERED' ||
-    orderStatus === 'COLLECTED';
+    orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
 
-  const inTransit = orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
+  const inTransit =
+    orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
 
   const delivered = orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
-
   const cancelled = orderStatus === 'CANCELLED' || orderStatus === 'REFUNDED';
 
   if (cancelled) {
@@ -115,7 +108,7 @@ function buildTimeline(
     },
     {
       key: 'transit',
-      label: 'In transit (nationwide delivery)',
+      label: 'In transit (worldwide delivery)',
       done: delivered,
       current: inTransit && !delivered,
       at: null,
