@@ -1,45 +1,7 @@
 'use client';
 
+import Image from 'next/image';
 import { FormEvent, useState } from 'react';
-
-/** Official FedEx wordmark colors — purple #4D148C, orange #FF6600 */
-function FedExLogo({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 200 56"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label="FedEx"
-    >
-      <title>FedEx</title>
-      {/* Fed — purple */}
-      <text
-        x="4"
-        y="42"
-        fontFamily="Arial Black, Helvetica Neue, Arial, sans-serif"
-        fontWeight="900"
-        fontSize="44"
-        fill="#4D148C"
-        letterSpacing="-1.5"
-      >
-        Fed
-      </text>
-      {/* Ex — orange (classic two-tone mark) */}
-      <text
-        x="92"
-        y="42"
-        fontFamily="Arial Black, Helvetica Neue, Arial, sans-serif"
-        fontWeight="900"
-        fontSize="44"
-        fill="#FF6600"
-        letterSpacing="-1.5"
-      >
-        Ex
-      </text>
-    </svg>
-  );
-}
 
 export function FedExTracker() {
   const [tracking, setTracking] = useState('');
@@ -57,14 +19,20 @@ export function FedExTracker() {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-ink-900 to-ink-950">
-      <div className="border-b border-white/10 bg-[#4D148C]/25 px-5 py-5 sm:px-6">
+      <div className="border-b border-white/10 bg-white px-5 py-5 sm:px-6">
         <div className="flex flex-wrap items-center gap-4">
-          <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
-            <FedExLogo className="h-8 w-auto sm:h-9" />
-          </div>
+          {/* Official FedEx wordmark — no letter gap */}
+          <Image
+            src="/images/fedex-logo.jpg"
+            alt="FedEx"
+            width={160}
+            height={48}
+            className="h-10 w-auto object-contain object-left sm:h-12"
+            priority
+          />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-white">Official FedEx tracking</p>
-            <p className="text-xs text-ink-300">
+            <p className="text-sm font-semibold text-ink-950">Official FedEx tracking</p>
+            <p className="text-xs text-ink-600">
               Enter the tracking number from your delivery email — opens FedEx.com
             </p>
           </div>
