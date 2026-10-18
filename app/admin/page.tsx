@@ -19,6 +19,8 @@ export default async function AdminPage() {
     sold,
     customers,
     pendingReservations,
+    orderCount,
+    pendingPayments,
     openChats,
     unreadNotifications,
     recentReservations,
@@ -31,6 +33,8 @@ export default async function AdminPage() {
     prisma.vehicle.count({ where: { inventoryStatus: 'SOLD' } }),
     prisma.user.count({ where: { role: 'CUSTOMER' } }),
     prisma.reservation.count({ where: { status: 'PENDING' } }),
+    prisma.order.count(),
+    prisma.order.count({ where: { paymentStatus: 'PENDING' } }),
     prisma.chatThread.count({ where: { status: 'OPEN' } }).catch(() => 0),
     prisma.adminNotification.count({ where: { read: false } }).catch(() => 0),
     prisma.reservation.findMany({
@@ -52,9 +56,9 @@ export default async function AdminPage() {
     { label: 'Reserved', value: reserved },
     { label: 'Sold', value: sold },
     { label: 'Customers', value: customers },
-    { label: 'Pending reservations', value: pendingReservations },
+    { label: 'Orders', value: orderCount },
+    { label: 'Payments to review', value: pendingPayments },
     { label: 'Open chats', value: openChats },
-    { label: 'Unread alerts', value: unreadNotifications },
   ];
 
   return (
@@ -65,13 +69,24 @@ export default async function AdminPage() {
           <p className="text-sm text-ink-400">Signed in as {session.email}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/orders" className="btn-primary !py-2 text-xs">
+            Orders{pendingPayments ? ` (${pendingPayments})` : ''}
+          </Link>
           <Link href="/admin/notifications" className="btn-secondary !py-2 text-xs">
             Notifications{unreadNotifications ? ` (${unreadNotifications})` : ''}
           </Link>
-          <Link href="/admin/vehicles" className="btn-secondary !py-2 text-xs">Vehicles</Link>
-          <Link href="/admin/users" className="btn-secondary !py-2 text-xs">Users</Link>
-          <Link href="/admin/payments" className="btn-secondary !py-2 text-xs">Payments</Link>
-          <Link href="/admin/chat" className="btn-secondary !py-2 text-xs">Live chat</Link>
+          <Link href="/admin/vehicles" className="btn-secondary !py-2 text-xs">
+            Vehicles
+          </Link>
+          <Link href="/admin/users" className="btn-secondary !py-2 text-xs">
+            Users
+          </Link>
+          <Link href="/admin/payments" className="btn-secondary !py-2 text-xs">
+            Payments
+          </Link>
+          <Link href="/admin/chat" className="btn-secondary !py-2 text-xs">
+            Live chat
+          </Link>
           <LogoutButton />
         </div>
       </div>
@@ -88,17 +103,26 @@ export default async function AdminPage() {
       <section className="mt-12">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Latest alerts</h2>
-          <Link href="/admin/notifications" className="text-sm text-ink-400 hover:text-white">View all →</Link>
+          <Link href="/admin/notifications" className="text-sm text-ink-400 hover:text-white">
+            View all →
+          </Link>
         </div>
         <ul className="mt-4 space-y-2">
           {recentNotifications.length === 0 && (
-            <li className="text-sm text-ink-500">No alerts yet. New signups and orders appear here and by email.</li>
+            <li className="text-sm text-ink-500">
+              No alerts yet. New signups, orders, and payment reports appear here and by email.
+            </li>
           )}
           {recentNotifications.map((n) => (
             <li key={n.id} className={`card p-4 text-sm ${n.read ? 'opacity-60' : ''}`}>
               <span className="text-xs uppercase text-ink-500">{n.type}</span>
               <p className="font-medium">{n.title}</p>
               <p className="text-ink-400">{n.body}</p>
+              {n.href && (
+                <Link href={n.href} className="mt-1 inline-block text-xs text-white underline">
+                  Open
+                </Link>
+              )}
             </li>
           ))}
         </ul>
@@ -122,13 +146,19 @@ export default async function AdminPage() {
                 <tr key={r.id} className="border-t border-white/10">
                   <td className="px-4 py-3 font-mono text-xs">{r.reference}</td>
                   <td className="px-4 py-3">{r.user.email}</td>
-                  <td className="px-4 py-3">{r.vehicle.model} {r.vehicle.trim}</td>
+                  <td className="px-4 py-3">
+                    {r.vehicle.model} {r.vehicle.trim}
+                  </td>
                   <td className="px-4 py-3">{formatMoney(Number(r.depositAmount))}</td>
                   <td className="px-4 py-3">{r.status}</td>
                 </tr>
               ))}
               {recentReservations.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-ink-500">No reservations yet</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-ink-500">
+                    No reservations yet
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -138,13 +168,19 @@ export default async function AdminPage() {
       <section className="mt-12">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Recent customers</h2>
-          <Link href="/admin/users" className="text-sm text-ink-400 hover:text-white">View all →</Link>
+          <Link href="/admin/users" className="text-sm text-ink-400 hover:text-white">
+            View all →
+          </Link>
         </div>
         <ul className="mt-4 space-y-2">
           {recentUsers.map((u) => (
             <li key={u.id} className="card flex justify-between p-4 text-sm">
-              <span>{u.fullName} · {u.email}</span>
-              <span className="text-ink-400">{u.role} · {u.status}</span>
+              <span>
+                {u.fullName} · {u.email}
+              </span>
+              <span className="text-ink-400">
+                {u.role} · {u.status}
+              </span>
             </li>
           ))}
         </ul>
