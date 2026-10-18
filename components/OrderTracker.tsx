@@ -52,7 +52,7 @@ export function OrderTracker({ initialReference }: { initialReference?: string }
       setResult(data);
       setReference(ref);
     } catch {
-      setError('Network error — try again');
+      setError('Network error. Try again.');
     } finally {
       setLoading(false);
     }
@@ -126,7 +126,7 @@ export function OrderTracker({ initialReference }: { initialReference?: string }
           </div>
 
           <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
-            Worldwide delivery — tracked from start to finish with your order number.
+            Worldwide delivery, tracked from start to finish with your order number.
           </p>
 
           <ol className="mt-6 space-y-0">

@@ -45,8 +45,7 @@ export async function GET(req: NextRequest) {
       currency: order.currency,
       sellingPrice: order.sellingPrice.toString(),
       steps,
-      message:
-        'We deliver worldwide. Your order is tracked from placement through delivery.',
+      message: 'We deliver worldwide. Your order is tracked from placement through delivery.',
     });
   } catch (e) {
     console.error('Order track failed', e);
@@ -54,23 +53,13 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Honest timeline:
+ * - Payment is only "confirmed" after admin marks PAID
+ * - Customer "I made payment" sets paymentStatus PENDING (reported, not confirmed)
+ */
 function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Date) {
-  const paid =
-    paymentStatus === 'PAID' ||
-    orderStatus === 'PAID' ||
-    orderStatus === 'PROCESSING' ||
-    orderStatus === 'DELIVERED' ||
-    orderStatus === 'COLLECTED';
-
-  const processing =
-    orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
-
-  const inTransit =
-    orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
-
-  const delivered = orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
   const cancelled = orderStatus === 'CANCELLED' || orderStatus === 'REFUNDED';
-
   if (cancelled) {
     return [
       { key: 'placed', label: 'Order placed', done: true, current: false, at: createdAt.toISOString() },
@@ -84,33 +73,62 @@ function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Da
     ];
   }
 
+  const paymentConfirmed =
+    paymentStatus === 'PAID' ||
+    orderStatus === 'PAID' ||
+    orderStatus === 'PROCESSING' ||
+    orderStatus === 'DELIVERED' ||
+    orderStatus === 'COLLECTED';
+
+  const paymentReported = paymentStatus === 'PENDING' && !paymentConfirmed;
+
+  const preparing =
+    orderStatus === 'PAID' ||
+    orderStatus === 'PROCESSING' ||
+    orderStatus === 'DELIVERED' ||
+    orderStatus === 'COLLECTED';
+
+  const inTransit =
+    orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
+
+  const delivered = orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
+
+  let paymentLabel = 'Awaiting payment';
+  if (paymentConfirmed) paymentLabel = 'Payment confirmed';
+  else if (paymentReported) paymentLabel = 'Payment reported (pending review)';
+
+  const awaitingPayment =
+    !paymentConfirmed &&
+    !paymentReported &&
+    (orderStatus === 'INQUIRY' || orderStatus === 'PENDING_PAYMENT' || paymentStatus === 'NONE');
+
   return [
     {
       key: 'placed',
       label: 'Order placed',
       done: true,
-      current: orderStatus === 'INQUIRY' || orderStatus === 'PENDING_PAYMENT',
+      current: false,
       at: createdAt.toISOString(),
     },
     {
       key: 'payment',
-      label: 'Payment received',
-      done: paid,
-      current: !paid && (orderStatus === 'PENDING_PAYMENT' || paymentStatus === 'PENDING'),
+      label: paymentLabel,
+      done: paymentConfirmed,
+      current: awaitingPayment || paymentReported,
       at: null,
     },
     {
       key: 'preparing',
       label: 'Preparing for transport',
-      done: processing,
-      current: orderStatus === 'PROCESSING' && !delivered,
+      done: inTransit,
+      current: orderStatus === 'PAID' && !inTransit,
       at: null,
     },
     {
       key: 'transit',
       label: 'In transit (worldwide delivery)',
       done: delivered,
-      current: inTransit && !delivered,
+      current: orderStatus === 'PROCESSING' && !delivered,
       at: null,
     },
     {
