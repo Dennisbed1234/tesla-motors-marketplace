@@ -4,7 +4,7 @@ export default function TermsPage() {
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-ink-500">Legal</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">Terms and conditions</h1>
       <p className="mt-3 text-sm text-ink-400">
-        These terms are written to be clear and fair. If anything is unclear, just ask — we are happy
+        These terms are written to be clear and fair. If anything is unclear, just ask. We are happy
         to explain.
       </p>
 
@@ -30,7 +30,7 @@ export default function TermsPage() {
         <section className="card p-5">
           <h2 className="font-semibold text-white">Orders and payment</h2>
           <p className="mt-2 text-ink-400">
-            When you place an order you choose a payment plan — full payment, 50% deposit, or 25%
+            When you place an order you choose a payment plan: full payment, 50% deposit, or 25%
             down payment. Remaining balances, if any, are due before delivery as shown on your
             confirmation. We verify payments carefully so your vehicle can move forward without delays.
           </p>
@@ -40,7 +40,7 @@ export default function TermsPage() {
           <h2 className="font-semibold text-white">Pricing and availability</h2>
           <p className="mt-2 text-ink-400">
             Prices and specifications reflect the listing you selected. If something changes before
-            we confirm your order, we will contact you with options — including canceling for a
+            we confirm your order, we will contact you with options, including canceling for a
             complete refund if you prefer not to proceed.
           </p>
         </section>

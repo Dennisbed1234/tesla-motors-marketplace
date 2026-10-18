@@ -10,7 +10,7 @@ export default function AboutPage() {
         </p>
         <p>
           Our New York team manages listings, orders, payment verification, and delivery coordination.
-          You get the Tesla product line you expect — with a guided buying experience through our
+          You get the Tesla product line you expect, with a guided buying experience through our
           affiliate marketplace.
         </p>
         <p>

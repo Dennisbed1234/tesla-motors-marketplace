@@ -6,7 +6,6 @@ import { RANGE_DISCLAIMER } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // Prefer new releases (Roadster) at the top, then newest updates, then other featured
   const allFeatured = await prisma.vehicle
     .findMany({
       where: { published: true, featured: true },
@@ -56,7 +55,7 @@ export default async function HomePage() {
           <div>
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Featured vehicles</h2>
             <p className="mt-2 text-sm text-ink-400">
-              New releases first — including the 2026 Roadster lineup.
+              New releases first, including the 2026 Roadster lineup.
             </p>
           </div>
           <Link href="/vehicles" className="hidden text-sm text-ink-300 hover:text-white sm:inline">
@@ -74,9 +73,9 @@ export default async function HomePage() {
                 key={v.id}
                 slug={v.slug}
                 model={v.model}
-                trim={v.trim}
                 modelYear={v.modelYear}
-                price={v.price.toString()}
+                trim={v.trim}
+                price={Number(v.price)}
                 currency={v.currency}
                 rangeEpa={v.rangeEpa}
                 accel060={v.accel060}
@@ -89,31 +88,10 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-        <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            'Explore available vehicles',
-            'Compare specifications and prices',
-            'Select a vehicle',
-            'Submit a purchase inquiry or reservation',
-            'Complete the transaction through the configured process',
-            'Arrange delivery or collection',
-          ].map((step, i) => (
-            <li key={step} className="card flex gap-4 p-5">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-ink-950">
-                {i + 1}
-              </span>
-              <span className="text-sm text-ink-200">{step}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-        <p className="rounded-2xl border border-white/10 bg-ink-900/50 p-5 text-xs leading-relaxed text-ink-400">
-          {RANGE_DISCLAIMER}
-        </p>
+      <section className="border-t border-white/10 bg-ink-900/40">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <p className="text-xs leading-relaxed text-ink-500">{RANGE_DISCLAIMER}</p>
+        </div>
       </section>
     </>
   );

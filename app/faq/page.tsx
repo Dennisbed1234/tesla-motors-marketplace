@@ -2,11 +2,11 @@ export default function FaqPage() {
   const items = [
     {
       q: 'Are you part of Tesla, Inc.?',
-      a: 'Tesla Motors Marketplace is an authorized affiliate partner focused on Tesla electric vehicles. We help customers browse, compare, reserve, and complete purchases of Tesla models through our New York–based team.',
+      a: 'Tesla Motors Marketplace is an authorized affiliate partner focused on Tesla electric vehicles. We help customers browse, compare, reserve, and complete purchases of Tesla models through our New York based team.',
     },
     {
       q: 'Why does this site look different from tesla.com?',
-      a: 'This is our affiliate marketplace experience — built for browsing inventory, placing deposits, and working with our advisors. Official product engineering and factory delivery programs remain with Tesla, Inc. Your order with us is handled by our team from start to delivery coordination.',
+      a: 'This is our affiliate marketplace experience, built for browsing inventory, placing deposits, and working with our advisors. Official product engineering and factory delivery programs remain with Tesla, Inc. Your order with us is handled by our team from start to delivery coordination.',
     },
     {
       q: 'Are the vehicles real and available?',

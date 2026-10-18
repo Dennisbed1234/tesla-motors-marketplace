@@ -13,7 +13,7 @@ export default function DeliveryPage() {
         <p className="mt-2 text-sm leading-relaxed text-ink-300">
           Tesla Motors Marketplace ships and delivers internationally. From the moment you place an
           order to the day your vehicle arrives, track every step with your{' '}
-          <strong className="font-semibold text-white">order number</strong> — start to finish.
+          <strong className="font-semibold text-white">order number</strong>, from start to finish.
         </p>
         <ul className="mt-4 grid gap-2 text-sm text-ink-400 sm:grid-cols-2">
           <li className="flex gap-2">
@@ -46,12 +46,12 @@ export default function DeliveryPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {[
             {
-              t: 'Order to door — worldwide',
+              t: 'Order to door, worldwide',
               d: 'We schedule professional transport to the delivery address on your order, wherever you are in the world.',
             },
             {
               t: 'Track with your order number',
-              d: 'Enter ORD-… above — or open Track from any order on your account — to see payment, preparation, in-transit, and delivered status.',
+              d: 'Enter ORD-… above, or open Track from any order on your account, to see payment, preparation, in-transit, and delivered status.',
             },
             {
               t: 'Carrier updates',
@@ -80,7 +80,7 @@ export default function DeliveryPage() {
           or use live chat. Have your <strong className="text-white">order number</strong> ready.
         </p>
         <p className="mt-3 text-xs text-ink-500">
-          Office: 235 East 42nd Street, New York, NY 10017 · Worldwide delivery · Affiliate partner of
+          Office: 235 East 42nd Street, New York, NY 10017. Worldwide delivery. Affiliate partner of
           Tesla, Inc.
         </p>
       </section>

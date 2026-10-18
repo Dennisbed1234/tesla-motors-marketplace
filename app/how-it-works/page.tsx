@@ -2,7 +2,7 @@ export default function HowItWorksPage() {
   const steps = [
     {
       t: 'Explore',
-      d: 'Browse our Tesla catalog — Model 3, Model Y, Model S, Model X, Cybertruck, Semi, and the latest Roadster lineup.',
+      d: 'Browse our Tesla catalog: Model 3, Model Y, Model S, Model X, Cybertruck, Semi, and the latest Roadster lineup.',
     },
     {
       t: 'Compare',

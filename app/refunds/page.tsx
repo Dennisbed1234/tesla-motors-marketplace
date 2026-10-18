@@ -12,7 +12,7 @@ export default function RefundsPage() {
         <p className="text-sm font-semibold text-emerald-100">Complete refunds</p>
         <p className="mt-2 text-sm leading-relaxed text-emerald-50/90">
           Eligible cancellations receive a <strong className="font-semibold">complete refund</strong> of
-          amounts you paid toward that order — including deposits and down payments — returned to the
+          amounts you paid toward that order, including deposits and down payments, returned to the
           original payment method whenever possible.
         </p>
       </div>
@@ -32,7 +32,7 @@ export default function RefundsPage() {
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-ink-400">
             <li>Contact us via live chat or call (347) 508-6807 with your order number</li>
             <li>Our team confirms eligibility and starts the refund</li>
-            <li>Most card and crypto refunds complete within 5–10 business days after approval</li>
+            <li>Most card and crypto refunds complete within 5-10 business days after approval</li>
           </ol>
         </div>
 
@@ -40,7 +40,7 @@ export default function RefundsPage() {
           <h2 className="font-semibold text-white">After delivery has started</h2>
           <p className="mt-2 text-ink-400">
             If transport is already underway, we will still work with you in good faith. Depending on
-            carrier costs already incurred, we may discuss the fairest resolution — our priority is a
+            carrier costs already incurred, we may discuss the fairest resolution. Our priority is a
             complete refund whenever the situation allows.
           </p>
         </div>
