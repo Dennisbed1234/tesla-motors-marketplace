@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { parseOrderMeta } from '@/lib/shipping';
 
 /** Public order tracking by order reference (ORD-…). Limited fields only. */
 export async function GET(req: NextRequest) {
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No order found for that number' }, { status: 404 });
     }
 
+    const meta = parseOrderMeta(order.internalNotes);
     const steps = buildTimeline(order.orderStatus, order.paymentStatus, order.createdAt);
 
     return NextResponse.json({
@@ -44,6 +46,7 @@ export async function GET(req: NextRequest) {
       },
       currency: order.currency,
       sellingPrice: order.sellingPrice.toString(),
+      carrierTracking: meta.carrierTracking || null,
       steps,
       message: 'We deliver worldwide. Your order is tracked from placement through delivery.',
     });
@@ -53,11 +56,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/**
- * Honest timeline:
- * - Payment is only "confirmed" after admin marks PAID
- * - Customer "I made payment" sets paymentStatus PENDING (reported, not confirmed)
- */
 function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Date) {
   const cancelled = orderStatus === 'CANCELLED' || orderStatus === 'REFUNDED';
   if (cancelled) {
@@ -81,12 +79,6 @@ function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Da
     orderStatus === 'COLLECTED';
 
   const paymentReported = paymentStatus === 'PENDING' && !paymentConfirmed;
-
-  const preparing =
-    orderStatus === 'PAID' ||
-    orderStatus === 'PROCESSING' ||
-    orderStatus === 'DELIVERED' ||
-    orderStatus === 'COLLECTED';
 
   const inTransit =
     orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';

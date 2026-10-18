@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import {
+  parseOrderMeta,
+  stringifyOrderMeta,
+  ensureTrackingOnMeta,
+  syncShipmentEvents,
+} from '@/lib/shipping';
 
 const updateSchema = z.object({
   orderId: z.string().min(1),
@@ -51,42 +57,69 @@ export async function PATCH(req: Request) {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    let data: { orderStatus?: string; paymentStatus?: string } = {};
+    let orderStatus = order.orderStatus;
+    let paymentStatus = order.paymentStatus;
 
     switch (action) {
       case 'CONFIRM_PAYMENT':
-        data = { paymentStatus: 'PAID', orderStatus: 'PAID' };
+        paymentStatus = 'PAID';
+        orderStatus = 'PAID';
         break;
       case 'PREPARING':
-        data = { paymentStatus: 'PAID', orderStatus: 'PAID' };
+        paymentStatus = 'PAID';
+        orderStatus = 'PAID';
         break;
       case 'IN_TRANSIT':
-        data = { paymentStatus: 'PAID', orderStatus: 'PROCESSING' };
+        paymentStatus = 'PAID';
+        orderStatus = 'PROCESSING';
         break;
       case 'DELIVERED':
-        data = { paymentStatus: 'PAID', orderStatus: 'DELIVERED' };
+        paymentStatus = 'PAID';
+        orderStatus = 'DELIVERED';
         break;
       case 'COLLECTED':
-        data = { paymentStatus: 'PAID', orderStatus: 'COLLECTED' };
+        paymentStatus = 'PAID';
+        orderStatus = 'COLLECTED';
         break;
       case 'CANCEL':
-        data = { orderStatus: 'CANCELLED' };
+        orderStatus = 'CANCELLED';
         break;
       case 'REFUND':
-        data = { orderStatus: 'REFUNDED', paymentStatus: 'REFUNDED' };
+        orderStatus = 'REFUNDED';
+        paymentStatus = 'REFUNDED';
         break;
+    }
+
+    let meta = parseOrderMeta(order.internalNotes);
+
+    // Auto-issue tracking number when payment is confirmed / transport starts
+    if (
+      paymentStatus === 'PAID' &&
+      orderStatus !== 'CANCELLED' &&
+      orderStatus !== 'REFUNDED'
+    ) {
+      meta = ensureTrackingOnMeta(meta);
+      meta = syncShipmentEvents(meta, orderStatus);
     }
 
     const updated = await prisma.order.update({
       where: { id: orderId },
-      data: data as never,
+      data: {
+        orderStatus: orderStatus as never,
+        paymentStatus: paymentStatus as never,
+        internalNotes: stringifyOrderMeta(meta),
+      },
       include: {
         user: { select: { fullName: true, email: true } },
         vehicle: { select: { model: true, trim: true } },
       },
     });
 
-    return NextResponse.json({ ok: true, order: updated });
+    return NextResponse.json({
+      ok: true,
+      order: updated,
+      carrierTracking: meta.carrierTracking || null,
+    });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

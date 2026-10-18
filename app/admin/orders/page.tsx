@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { formatMoney } from '@/lib/utils';
+import { parseOrderMeta } from '@/lib/shipping';
 import { AdminOrderActions } from '@/components/AdminOrderActions';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,7 @@ export default async function AdminOrdersPage() {
         <div>
           <h1 className="text-2xl font-semibold">Orders</h1>
           <p className="mt-1 text-sm text-ink-400">
-            Confirm payments and move orders through transport. Tracking updates when you change status.
+            Confirm payment to auto-issue a tracking number. Advance status to update shipment movement.
             {needsReview > 0 ? ` ${needsReview} payment report(s) waiting.` : ''}
           </p>
         </div>
@@ -41,17 +42,10 @@ export default async function AdminOrdersPage() {
       </div>
 
       <div className="mt-8 space-y-4">
-        {orders.length === 0 && (
-          <p className="text-sm text-ink-500">No orders yet.</p>
-        )}
+        {orders.length === 0 && <p className="text-sm text-ink-500">No orders yet.</p>}
         {orders.map((o) => {
-          let reported = false;
-          try {
-            const meta = o.internalNotes ? JSON.parse(o.internalNotes) : {};
-            reported = Boolean(meta.paymentReportedAt);
-          } catch {
-            reported = false;
-          }
+          const meta = parseOrderMeta(o.internalNotes);
+          const reported = Boolean(meta.paymentReportedAt);
           return (
             <div key={o.id} className="card p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -68,6 +62,11 @@ export default async function AdminOrdersPage() {
                     {formatMoney(Number(o.sellingPrice), o.currency)} ·{' '}
                     {o.createdAt.toLocaleString()}
                   </p>
+                  {meta.carrierTracking && (
+                    <p className="mt-2 font-mono text-xs text-emerald-300">
+                      Track: {meta.carrierTracking}
+                    </p>
+                  )}
                   {reported && o.paymentStatus === 'PENDING' && (
                     <p className="mt-2 inline-block rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-medium text-amber-200">
                       Customer reported payment
