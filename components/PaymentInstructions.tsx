@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { PaymentMethodsConfig } from '@/lib/payments';
 
 function qrUrl(data: string) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=8&data=${encodeURIComponent(data)}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(data)}`;
 }
 
 export function PaymentInstructions({
@@ -25,6 +25,14 @@ export function PaymentInstructions({
     config.wireEnabled && (!preferredMethod || preferredMethod === 'WIRE');
   const showCard =
     config.creditDebitEnabled && (!preferredMethod || preferredMethod === 'CARD');
+
+  const cryptoList = config.crypto || [];
+  const [selectedId, setSelectedId] = useState(cryptoList[0]?.id || '');
+
+  const selected = useMemo(
+    () => cryptoList.find((c) => c.id === selectedId) || cryptoList[0],
+    [cryptoList, selectedId]
+  );
 
   async function copy(id: string, text: string) {
     try {
@@ -47,7 +55,7 @@ export function PaymentInstructions({
 
       {showCard && preferredMethod === 'CARD' && (
         <div className="rounded-xl border border-ink-200 p-4">
-          <p className="font-medium text-ink-950">💳 Credit / Debit card</p>
+          <p className="font-medium text-ink-950">Credit / Debit card</p>
           <p className="mt-1 text-sm text-ink-600">
             Your card details were submitted with this order. You will receive a confirmation once payment is processed.
           </p>
@@ -56,7 +64,7 @@ export function PaymentInstructions({
 
       {showCard && preferredMethod !== 'CARD' && preferredMethod !== 'CRYPTO' && preferredMethod !== 'WIRE' && (
         <div className="rounded-xl border border-ink-200 p-4">
-          <p className="font-medium text-ink-950">💳 Credit / Debit card</p>
+          <p className="font-medium text-ink-950">Credit / Debit card</p>
           <p className="mt-1 text-sm text-ink-600">
             You can pay by card from the order page when placing your order.
           </p>
@@ -70,7 +78,7 @@ export function PaymentInstructions({
         </div>
       )}
 
-      {showCrypto && (
+      {showCrypto && cryptoList.length > 0 && (
         <div className="space-y-4">
           <p className="font-medium text-ink-950">Crypto</p>
 
@@ -92,18 +100,33 @@ export function PaymentInstructions({
             </ul>
           </div>
 
-          {config.crypto.map((c) => (
-            <div
-              key={c.id}
-              className="grid gap-4 rounded-xl border border-ink-200 p-4 sm:grid-cols-[140px_1fr]"
+          <div>
+            <label htmlFor="crypto-select" className="mb-1.5 block text-xs font-medium text-ink-600">
+              Select coin / network
+            </label>
+            <select
+              id="crypto-select"
+              className="w-full rounded-xl border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-950 outline-none focus:border-ink-400"
+              value={selected?.id || ''}
+              onChange={(e) => setSelectedId(e.target.value)}
             >
+              {cryptoList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selected && (
+            <div className="grid gap-4 rounded-xl border border-ink-200 p-4 sm:grid-cols-[160px_1fr]">
               <div className="flex flex-col items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={qrUrl(c.address)}
-                  alt={`QR code for ${c.label}`}
-                  width={140}
-                  height={140}
+                  src={qrUrl(selected.address)}
+                  alt={`QR code for ${selected.label}`}
+                  width={160}
+                  height={160}
                   className="rounded-lg border border-ink-100 bg-white p-1"
                 />
                 <span className="mt-1 text-[10px] uppercase tracking-wide text-ink-400">
@@ -111,18 +134,18 @@ export function PaymentInstructions({
                 </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-ink-950">{c.label}</p>
-                <p className="mt-2 break-all font-mono text-xs text-ink-700">{c.address}</p>
+                <p className="text-sm font-semibold text-ink-950">{selected.label}</p>
+                <p className="mt-2 break-all font-mono text-xs text-ink-700">{selected.address}</p>
                 <button
                   type="button"
-                  onClick={() => copy(c.id, c.address)}
+                  onClick={() => copy(selected.id, selected.address)}
                   className="mt-3 rounded-full border border-ink-300 px-4 py-1.5 text-xs font-medium text-ink-950 hover:bg-ink-50"
                 >
-                  {copied === c.id ? 'Copied ✓' : 'Copy address'}
+                  {copied === selected.id ? 'Copied' : 'Copy address'}
                 </button>
               </div>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

@@ -30,7 +30,15 @@ export async function GET(req: NextRequest) {
     }
 
     const meta = parseOrderMeta(order.internalNotes);
-    const steps = buildTimeline(order.orderStatus, order.paymentStatus, order.createdAt);
+    const paymentReportedAt =
+      typeof meta.paymentReportedAt === 'string' ? meta.paymentReportedAt : null;
+
+    const steps = buildTimeline(
+      order.orderStatus,
+      order.paymentStatus,
+      order.createdAt,
+      paymentReportedAt
+    );
 
     return NextResponse.json({
       reference: order.reference,
@@ -56,7 +64,12 @@ export async function GET(req: NextRequest) {
   }
 }
 
-function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Date) {
+function buildTimeline(
+  orderStatus: string,
+  paymentStatus: string,
+  createdAt: Date,
+  paymentReportedAt: string | null
+) {
   const cancelled = orderStatus === 'CANCELLED' || orderStatus === 'REFUNDED';
   if (cancelled) {
     return [
@@ -78,7 +91,8 @@ function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Da
     orderStatus === 'DELIVERED' ||
     orderStatus === 'COLLECTED';
 
-  const paymentReported = paymentStatus === 'PENDING' && !paymentConfirmed;
+  // Only true after customer taps "I've made payment"
+  const paymentReported = Boolean(paymentReportedAt) && !paymentConfirmed;
 
   const inTransit =
     orderStatus === 'PROCESSING' || orderStatus === 'DELIVERED' || orderStatus === 'COLLECTED';
@@ -89,10 +103,7 @@ function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Da
   if (paymentConfirmed) paymentLabel = 'Payment confirmed';
   else if (paymentReported) paymentLabel = 'Payment reported (pending review)';
 
-  const awaitingPayment =
-    !paymentConfirmed &&
-    !paymentReported &&
-    (orderStatus === 'INQUIRY' || orderStatus === 'PENDING_PAYMENT' || paymentStatus === 'NONE');
+  const awaitingPayment = !paymentConfirmed && !paymentReported;
 
   return [
     {
@@ -107,7 +118,7 @@ function buildTimeline(orderStatus: string, paymentStatus: string, createdAt: Da
       label: paymentLabel,
       done: paymentConfirmed,
       current: awaitingPayment || paymentReported,
-      at: null,
+      at: paymentReportedAt,
     },
     {
       key: 'preparing',

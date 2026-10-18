@@ -82,7 +82,8 @@ export default async function OrderConfirmedPage({
     order.orderStatus === 'PROCESSING' ||
     order.orderStatus === 'DELIVERED' ||
     order.orderStatus === 'COLLECTED';
-  const alreadyReported = order.paymentStatus === 'PENDING' || Boolean(planMeta.paymentReportedAt);
+  // Only after customer taps the button (not merely PENDING in DB)
+  const alreadyReported = Boolean(planMeta.paymentReportedAt);
 
   return (
     <div className="min-h-[80vh] bg-white text-ink-950">
@@ -140,7 +141,11 @@ export default async function OrderConfirmedPage({
                 )}
               </p>
               <p className="mt-1 text-xs text-ink-500">
-                Status: {order.paymentStatus} · {order.createdAt.toLocaleDateString()}
+                {alreadyReported && !alreadyPaid
+                  ? 'Payment reported — awaiting verification'
+                  : `Status: ${order.paymentStatus}`}
+                {' · '}
+                {order.createdAt.toLocaleDateString()}
               </p>
             </div>
             {deliveryLine && (
@@ -171,7 +176,6 @@ export default async function OrderConfirmedPage({
           </div>
         </div>
 
-        {/* Payment methods only while still unpaid */}
         {!alreadyPaid && (
           <>
             <div className="border-t border-ink-100 pt-2">

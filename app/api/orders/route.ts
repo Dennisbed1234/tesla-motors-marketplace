@@ -90,6 +90,7 @@ export async function POST(req: Request) {
     const amountDue = planAmount(price, paymentPlan);
     const reference = orderRef();
 
+    // paymentStatus NONE until customer taps "I've made payment" (or admin confirms)
     const order = await prisma.order.create({
       data: {
         reference,
@@ -97,7 +98,7 @@ export async function POST(req: Request) {
         vehicleId,
         sellingPrice: price,
         currency: vehicle.currency,
-        paymentStatus: 'PENDING',
+        paymentStatus: 'NONE',
         orderStatus: 'PENDING_PAYMENT',
         deliveryNotes: notes || null,
         internalNotes: JSON.stringify({

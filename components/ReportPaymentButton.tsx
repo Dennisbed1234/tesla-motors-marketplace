@@ -12,7 +12,7 @@ export function ReportPaymentButton({
   alreadyPaid?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(alreadyReported || alreadyPaid || false);
+  const [done, setDone] = useState(Boolean(alreadyReported || alreadyPaid));
   const [message, setMessage] = useState(
     alreadyPaid
       ? 'Payment confirmed by our team.'
@@ -55,23 +55,22 @@ export function ReportPaymentButton({
   }
 
   return (
-    <div className="rounded-xl border border-ink-200 bg-ink-50 p-4">
-      <p className="text-sm font-medium text-ink-950">Already sent the payment?</p>
-      <p className="mt-1 text-xs text-ink-600">
-        Tap below after you transfer funds. Our team will verify and update your tracking status.
-        This does not mark the order paid by itself.
+    <div className="rounded-xl border-2 border-ink-950 bg-white p-5 shadow-sm">
+      <p className="text-base font-semibold text-ink-950">Already sent the payment?</p>
+      <p className="mt-1 text-sm text-ink-600">
+        After you transfer funds, tap the button below. Our team will verify and update your tracking.
       </p>
       {!done ? (
         <button
           type="button"
           onClick={onClick}
           disabled={loading}
-          className="mt-3 w-full rounded-full bg-ink-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto"
+          className="mt-4 w-full rounded-full bg-ink-950 px-5 py-3 text-sm font-semibold text-white hover:bg-ink-800 disabled:opacity-60"
         >
           {loading ? 'Submitting…' : "I've made payment"}
         </button>
       ) : (
-        <p className="mt-3 text-sm text-emerald-800">{message}</p>
+        <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{message}</p>
       )}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
