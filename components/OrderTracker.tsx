@@ -21,6 +21,7 @@ type TrackResult = {
   vehicle: { model: string; trim: string; modelYear: number; slug: string };
   currency: string;
   sellingPrice: string;
+  carrierTracking?: string | null;
   steps: Step[];
   message: string;
 };
@@ -116,6 +117,13 @@ export function OrderTracker({ initialReference }: { initialReference?: string }
                 Placed {new Date(result.createdAt).toLocaleDateString()} ·{' '}
                 {formatMoney(result.sellingPrice, result.currency)}
               </p>
+              {result.carrierTracking && (
+                <p className="mt-2 text-xs text-emerald-300">
+                  Shipment tracking:{' '}
+                  <span className="font-mono font-semibold">{result.carrierTracking}</span>
+                  <span className="ml-1 text-ink-500">(use in FedEx box below)</span>
+                </p>
+              )}
             </div>
             <Link
               href={`/vehicles/${result.vehicle.slug}`}
