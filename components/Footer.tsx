@@ -18,6 +18,11 @@ export async function Footer() {
             Premium catalog for Tesla electric vehicles. Browse, compare, reserve, and order.
             We are an affiliate partner of Tesla, Inc.
           </p>
+          <p className="mt-3 text-xs text-ink-400">
+            <a href="mailto:info@teslamotors.sale" className="text-white hover:underline">
+              info@teslamotors.sale
+            </a>
+          </p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-300">Explore</p>
@@ -49,7 +54,10 @@ export async function Footer() {
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-ink-500">
         © {new Date().getFullYear()} Tesla Motors Marketplace. Affiliate partner of Tesla, Inc.
-        Tesla is a trademark of Tesla, Inc.
+        Tesla is a trademark of Tesla, Inc.{' '}
+        <a href="mailto:info@teslamotors.sale" className="text-ink-400 hover:text-white">
+          info@teslamotors.sale
+        </a>
       </div>
     </footer>
   );

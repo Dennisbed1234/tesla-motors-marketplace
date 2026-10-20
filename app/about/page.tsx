@@ -23,6 +23,14 @@ export default function AboutPage() {
         <h2 className="text-base font-semibold text-white">Contact</h2>
         <dl className="mt-4 space-y-3 text-ink-300">
           <div>
+            <dt className="text-xs uppercase tracking-wider text-ink-500">Email</dt>
+            <dd className="mt-1">
+              <a href="mailto:info@teslamotors.sale" className="text-white hover:underline">
+                info@teslamotors.sale
+              </a>
+            </dd>
+          </div>
+          <div>
             <dt className="text-xs uppercase tracking-wider text-ink-500">Phone</dt>
             <dd className="mt-1">
               <a href="tel:+13475086807" className="text-white hover:underline">
