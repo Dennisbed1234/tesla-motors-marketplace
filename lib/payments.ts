@@ -16,8 +16,27 @@ export const DEFAULT_PAYMENT_METHODS: PaymentMethodsConfig = {
   creditDebitEnabled: true,
   wireEnabled: true,
   cryptoEnabled: true,
-  wireInstructions:
-    'Bank wire details will be provided by your advisor after order confirmation. Reference your order number on the transfer.',
+  wireInstructions: `Tesla Motors Marketplace
+Beneficiary / Account name: Tesla Motors Marketplace
+Bank name: JPMorgan Chase Bank, N.A.
+Bank address: 270 Park Avenue, New York, NY 10017, USA
+
+Routing number (ACH): 021000021
+Wire routing (domestic): 021000021
+SWIFT / BIC (international): CHASUS33
+Account number: Contact your advisor or use the reference on your order confirmation
+
+Payment reference (required): Your order number (e.g. TM-XXXXXXXX)
+Currency: USD
+
+Important
+• Include your full order reference in the wire memo / reference field so we can match payment to your order.
+• Domestic wires typically clear in 1 business day; international wires may take 2–5 business days.
+• Do not send cash. Bank fees charged by your institution are your responsibility.
+• After you send the wire, tap “I’ve made payment” on your order page (if shown) or email info@teslamotors.sale with the transfer confirmation.
+
+Questions: info@teslamotors.sale · (347) 508-6807
+235 East 42nd Street, New York, NY 10017`,
   crypto: [
     {
       id: 'btc',
