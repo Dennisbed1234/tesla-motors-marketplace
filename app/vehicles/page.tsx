@@ -1,8 +1,24 @@
+import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { VehicleCard } from '@/components/VehicleCard';
 import { Prisma } from '@prisma/client';
+import { getSiteUrl } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Tesla vehicles for sale',
+  description:
+    'Browse available Tesla Model 3, Model Y, Model S, Model X, Cybertruck, and Roadster listings. Compare specs, check availability, and place an order.',
+  alternates: { canonical: '/vehicles' },
+  openGraph: {
+    title: 'Tesla vehicles for sale | Tesla Motors',
+    description:
+      'Browse Tesla electric vehicles including Roadster, Cybertruck, and Model lineup. Clear pricing and reservation options.',
+    url: `${getSiteUrl()}/vehicles`,
+    type: 'website',
+  },
+};
 
 type SearchParams = {
   q?: string;
@@ -58,7 +74,7 @@ export default async function VehiclesPage({
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-semibold tracking-tight">Vehicles</h1>
       <p className="mt-2 max-w-2xl text-sm text-ink-400">
-        Filter by model, year, price, and availability. Sample listings are clearly labeled.
+        Filter by model, year, price, and availability.
       </p>
 
       <form className="mt-8 grid gap-3 rounded-2xl border border-white/10 bg-ink-900/50 p-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -66,7 +82,9 @@ export default async function VehiclesPage({
         <select name="model" defaultValue={searchParams.model || ''} className="input">
           <option value="">All models</option>
           {models.map((m) => (
-            <option key={m} value={m}>{m}</option>
+            <option key={m} value={m}>
+              {m}
+            </option>
           ))}
         </select>
         <select name="status" defaultValue={searchParams.status || ''} className="input">
@@ -84,33 +102,31 @@ export default async function VehiclesPage({
         </select>
         <input name="min" type="number" defaultValue={searchParams.min} placeholder="Min price" className="input" />
         <input name="max" type="number" defaultValue={searchParams.max} placeholder="Max price" className="input" />
-        <input name="year" type="number" defaultValue={searchParams.year} placeholder="Model year" className="input" />
-        <button type="submit" className="btn-primary">Apply filters</button>
+        <input name="year" type="number" defaultValue={searchParams.year} placeholder="Year" className="input" />
+        <button type="submit" className="btn-primary">
+          Apply filters
+        </button>
       </form>
 
-      {vehicles.length === 0 ? (
-        <p className="mt-12 text-center text-sm text-ink-400">
-          No vehicles match these filters. Try clearing filters or seed the database.
-        </p>
-      ) : (
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {vehicles.map((v) => (
-            <VehicleCard
-              key={v.id}
-              slug={v.slug}
-              model={v.model}
-              trim={v.trim}
-              modelYear={v.modelYear}
-              price={v.price.toString()}
-              currency={v.currency}
-              rangeEpa={v.rangeEpa}
-              accel060={v.accel060}
-              inventoryStatus={v.inventoryStatus}
-              condition={v.condition}
-              imageUrl={v.images[0]?.url}
-            />
-          ))}
-        </div>
+      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {vehicles.map((v) => (
+          <VehicleCard
+            key={v.id}
+            slug={v.slug}
+            model={v.model}
+            trim={v.trim}
+            modelYear={v.modelYear}
+            price={Number(v.price)}
+            currency={v.currency}
+            inventoryStatus={v.inventoryStatus}
+            condition={v.condition}
+            imageUrl={v.images[0]?.url}
+          />
+        ))}
+      </div>
+
+      {vehicles.length === 0 && (
+        <p className="mt-12 text-center text-sm text-ink-400">No vehicles match these filters.</p>
       )}
     </div>
   );

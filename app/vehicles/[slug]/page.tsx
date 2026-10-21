@@ -1,19 +1,145 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { formatMoney, RANGE_DISCLAIMER, SPEC_UNAVAILABLE } from '@/lib/utils';
 import { getSession } from '@/lib/auth';
 import { FavoriteButton } from '@/components/FavoriteButton';
+import { absoluteUrl, getSiteUrl, SITE_NAME } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const v = await prisma.vehicle.findUnique({ where: { slug: params.slug } }).catch(() => null);
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const v = await prisma.vehicle
+    .findUnique({
+      where: { slug: params.slug },
+      include: { images: { orderBy: { displayOrder: 'asc' }, take: 1 } },
+    })
+    .catch(() => null);
+
   if (!v) return { title: 'Vehicle' };
+
+  const title = `${v.modelYear} Tesla ${v.model} ${v.trim}`;
+  const descSource =
+    v.description?.trim() ||
+    `${v.modelYear} Tesla ${v.model} ${v.trim}. Browse specs, pricing, and order options at ${SITE_NAME}.`;
+  const description = descSource.slice(0, 155);
+  const url = `${getSiteUrl()}/vehicles/${v.slug}`;
+  const image = absoluteUrl(v.images[0]?.url) || absoluteUrl('/icon');
+  const price = Number(v.price);
+
   return {
-    title: `${v.modelYear} Tesla ${v.model} ${v.trim}`,
-    description: v.description.slice(0, 155),
+    title,
+    description,
+    alternates: { canonical: `/vehicles/${v.slug}` },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+      siteName: SITE_NAME,
+      images: image
+        ? [{ url: image, alt: title }]
+        : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+    other: price > 0
+      ? {
+          'product:price:amount': String(price),
+          'product:price:currency': v.currency || 'USD',
+        }
+      : undefined,
   };
+}
+
+function ProductJsonLd({
+  vehicle,
+  imageUrl,
+  price,
+}: {
+  vehicle: {
+    slug: string;
+    model: string;
+    trim: string;
+    modelYear: number;
+    description: string;
+    currency: string;
+    inventoryStatus: string;
+    accel060: string | null;
+    topSpeed: string | null;
+    rangeEpa: number | null;
+  };
+  imageUrl?: string;
+  price: number;
+}) {
+  const url = `${getSiteUrl()}/vehicles/${vehicle.slug}`;
+  const availability =
+    vehicle.inventoryStatus === 'AVAILABLE'
+      ? 'https://schema.org/InStock'
+      : vehicle.inventoryStatus === 'SOLD'
+        ? 'https://schema.org/SoldOut'
+        : vehicle.inventoryStatus === 'RESERVED'
+          ? 'https://schema.org/LimitedAvailability'
+          : 'https://schema.org/PreOrder';
+
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Car',
+    name: `${vehicle.modelYear} Tesla ${vehicle.model} ${vehicle.trim}`,
+    brand: { '@type': 'Brand', name: 'Tesla' },
+    model: vehicle.model,
+    vehicleModelDate: String(vehicle.modelYear),
+    description: vehicle.description?.slice(0, 500),
+    url,
+    image: imageUrl ? [imageUrl] : undefined,
+    manufacturer: { '@type': 'Organization', name: 'Tesla, Inc.' },
+  };
+
+  if (vehicle.accel060) {
+    data.accelerationTime = vehicle.accel060;
+  }
+  if (vehicle.topSpeed) {
+    data.speed = vehicle.topSpeed;
+  }
+  if (vehicle.rangeEpa) {
+    data.mileageFromOdometer = {
+      '@type': 'QuantitativeValue',
+      value: vehicle.rangeEpa,
+      unitCode: 'SMI',
+      name: 'Estimated range (mi)',
+    };
+  }
+
+  if (price > 0) {
+    data.offers = {
+      '@type': 'Offer',
+      url,
+      priceCurrency: vehicle.currency || 'USD',
+      price: price,
+      availability,
+      seller: {
+        '@type': 'AutoDealer',
+        name: SITE_NAME,
+        url: getSiteUrl(),
+      },
+    };
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
 }
 
 export default async function VehicleDetailPage({ params }: { params: { slug: string } }) {
@@ -33,6 +159,7 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
     vehicle.inventoryStatus !== 'SOLD' &&
     vehicle.inventoryStatus !== 'UNAVAILABLE';
   const deposit25 = Math.round(price * 0.25 * 100) / 100;
+  const primaryImage = absoluteUrl(vehicle.images[0]?.url);
 
   const specs: [string, string][] = [
     ['Model year', String(vehicle.modelYear)],
@@ -43,7 +170,12 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
     ['Drive', vehicle.driveType || SPEC_UNAVAILABLE],
     ['0–60 mph', vehicle.accel060 || SPEC_UNAVAILABLE],
     ['Top speed', vehicle.topSpeed || SPEC_UNAVAILABLE],
-    ['Range', vehicle.rangeEpa ? `${vehicle.rangeEpa} mi (${vehicle.rangeStandard || 'est.'})` : SPEC_UNAVAILABLE],
+    [
+      'Range',
+      vehicle.rangeEpa
+        ? `${vehicle.rangeEpa} mi (${vehicle.rangeStandard || 'est.'})`
+        : SPEC_UNAVAILABLE,
+    ],
     ['Battery', vehicle.batteryKwh ? `${vehicle.batteryKwh} kWh` : SPEC_UNAVAILABLE],
     ['Seating', vehicle.seating ? String(vehicle.seating) : SPEC_UNAVAILABLE],
     ['Horsepower', vehicle.horsepower || SPEC_UNAVAILABLE],
@@ -58,6 +190,8 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <ProductJsonLd vehicle={vehicle} imageUrl={primaryImage} price={price} />
+
       <div className="grid gap-10 lg:grid-cols-2">
         <div>
           <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-ink-800">
@@ -103,7 +237,8 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
             )}
             {vehicle.inventoryStatus === 'AVAILABLE' && (
               <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs uppercase tracking-wide text-emerald-200">
-                Available</span>
+                Available
+              </span>
             )}
           </div>
           {price > 0 && (

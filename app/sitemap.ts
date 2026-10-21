@@ -1,14 +1,31 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
+import { getSiteUrl } from '@/lib/site';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  const staticRoutes = ['', '/vehicles', '/compare', '/how-it-works', '/about', '/contact', '/faq', '/privacy', '/terms', '/login', '/register'].map(
-    (path) => ({
-      url: `${base}${path}`,
-      lastModified: new Date(),
-    })
-  );
+  const base = getSiteUrl();
+  const staticPaths = [
+    '',
+    '/vehicles',
+    '/compare',
+    '/how-it-works',
+    '/about',
+    '/contact',
+    '/faq',
+    '/privacy',
+    '/terms',
+    '/refunds',
+    '/delivery',
+    '/login',
+    '/register',
+  ];
+
+  const staticRoutes: MetadataRoute.Sitemap = staticPaths.map((path) => ({
+    url: `${base}${path}`,
+    lastModified: new Date(),
+    changeFrequency: path === '' || path === '/vehicles' ? 'daily' : 'weekly',
+    priority: path === '' ? 1 : path === '/vehicles' ? 0.9 : 0.6,
+  }));
 
   let vehicles: { slug: string; updatedAt: Date }[] = [];
   try {
@@ -20,11 +37,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     vehicles = [];
   }
 
-  return [
-    ...staticRoutes,
-    ...vehicles.map((v) => ({
-      url: `${base}/vehicles/${v.slug}`,
-      lastModified: v.updatedAt,
-    })),
-  ];
+  const vehicleRoutes: MetadataRoute.Sitemap = vehicles.map((v) => ({
+    url: `${base}/vehicles/${v.slug}`,
+    lastModified: v.updatedAt,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  return [...staticRoutes, ...vehicleRoutes];
 }
