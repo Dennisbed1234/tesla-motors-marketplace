@@ -72,9 +72,21 @@ export function PaymentInstructions({
       )}
 
       {showWire && (
-        <div className="rounded-xl border border-ink-200 p-4">
-          <p className="font-medium text-ink-950">Wire transfer</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-ink-600">{config.wireInstructions}</p>
+        <div className="rounded-xl border border-ink-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-base font-semibold text-ink-950">Wire transfer instructions</p>
+            <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-600">
+              Bank transfer
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-ink-500">
+            Use the details below exactly. Always include your order number as the payment reference.
+          </p>
+          <div className="mt-4 rounded-lg border border-ink-100 bg-ink-50 p-4">
+            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-ink-800">
+              {config.wireInstructions}
+            </pre>
+          </div>
         </div>
       )}
 

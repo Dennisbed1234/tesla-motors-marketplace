@@ -400,6 +400,10 @@ export function OrderForm({
           <span className="text-ink-400">Due now</span>
           <span className="text-xl font-semibold">{formatMoney(amount, currency)}</span>
         </div>
+        <p className="mt-3 text-xs leading-relaxed text-ink-500">
+          Listed price excludes tax, title, and registration. Tax is not collected in this checkout
+          total — final tax depends on where the vehicle is registered (your state or country).
+        </p>
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
