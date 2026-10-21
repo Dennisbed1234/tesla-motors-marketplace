@@ -103,13 +103,17 @@ export default async function VehicleDetailPage({ params }: { params: { slug: st
             )}
             {vehicle.inventoryStatus === 'AVAILABLE' && (
               <span className="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs uppercase tracking-wide text-emerald-200">
-                Available
-              </span>
+                Available</span>
             )}
           </div>
           {price > 0 && (
             <p className="mt-2 text-sm text-ink-400">
               From {formatMoney(deposit25, vehicle.currency)} down (25% minimum)
+            </p>
+          )}
+          {price > 0 && (
+            <p className="mt-2 text-xs leading-relaxed text-ink-500">
+              Price excludes tax, title, and registration. Tax depends on where the vehicle is registered.
             </p>
           )}
 
