@@ -1,13 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { ReviewsGrid } from '@/components/ReviewsGrid';
 import { REVIEWS, REVIEW_COUNT } from '@/lib/reviews';
 import { getSiteUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Customer Reviews | Tesla Motors Marketplace',
+  title: 'Customer Reviews',
   description:
     'Read customer reviews of Tesla Motors Marketplace. Real feedback on reservations, deposits, shipping, and Tesla vehicle orders.',
   alternates: { canonical: '/reviews' },
@@ -62,8 +60,7 @@ export default function ReviewsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Header />
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">
             Reviews
@@ -96,8 +93,7 @@ export default function ReviewsPage() {
             Create account
           </Link>
         </div>
-      </main>
-      <Footer />
+      </div>
     </>
   );
 }
