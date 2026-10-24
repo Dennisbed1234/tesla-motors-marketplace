@@ -4,7 +4,6 @@ import { getSession } from '@/lib/auth';
 export async function Footer() {
   const session = await getSession();
 
-  // Logged-in users stay in the app experience — no guest marketing footer
   if (session) {
     return null;
   }
@@ -29,6 +28,7 @@ export async function Footer() {
           <ul className="mt-3 space-y-2 text-sm text-ink-400">
             <li><Link href="/vehicles" className="hover:text-white">Available vehicles</Link></li>
             <li><Link href="/compare" className="hover:text-white">Compare models</Link></li>
+            <li><Link href="/reviews" className="hover:text-white">Reviews</Link></li>
             <li><Link href="/how-it-works" className="hover:text-white">How it works</Link></li>
             <li><Link href="/about" className="hover:text-white">About us</Link></li>
           </ul>
