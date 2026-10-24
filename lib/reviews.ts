@@ -1,4 +1,4 @@
-/** Deterministic public reviews for Tesla Motors Marketplace (220 entries). */
+/** Deterministic public reviews for Tesla Motors Marketplace (exactly 200 entries). */
 export type Review = {
   id: string;
   name: string;
@@ -14,8 +14,8 @@ export type Review = {
   avatar: string;
 };
 
-const MALE = ["James","Michael","Robert","John","David","William","Richard","Joseph","Thomas","Charles","Daniel","Matthew","Anthony","Mark","Steven","Paul","Andrew","Joshua","Kevin","Brian","George","Timothy","Edward","Jason","Ryan","Jacob","Nicholas","Eric","Jonathan","Justin","Scott","Brandon","Benjamin","Samuel","Patrick","Alexander","Jack","Tyler","Aaron","Adam","Nathan","Henry","Kyle","Noah","Ethan","Christian","Sean","Austin","Dylan","Jordan","Gabriel","Logan","Juan","Vincent","Philip","Bradley","Raymond","Roger","Carl","Albert","Wayne","Ralph","Russell","Louis","Bobby","Johnny","Bruce","Alan","Eugene","Randy","Terry","Gerald","Harold","Jesse","Bryan","Billy","Walter","Keith","Douglas","Peter","Jeremy","Gary","Larry","Stephen","Jeffrey","Ronald","Frank","Gregory"];
-const FEMALE = ["Mary","Patricia","Jennifer","Linda","Elizabeth","Barbara","Susan","Jessica","Sarah","Karen","Nancy","Lisa","Betty","Margaret","Sandra","Ashley","Kimberly","Emily","Donna","Michelle","Dorothy","Carol","Amanda","Melissa","Deborah","Stephanie","Rebecca","Sharon","Laura","Cynthia","Kathleen","Amy","Angela","Shirley","Anna","Brenda","Pamela","Emma","Nicole","Helen","Samantha","Katherine","Christine","Debra","Rachel","Catherine","Carolyn","Janet","Maria","Heather","Diane","Julie","Joyce","Victoria","Kelly","Christina","Joan","Evelyn","Judith","Olivia","Andrea","Lauren","Kathryn","Megan","Cheryl","Hannah","Jacqueline","Martha","Gloria","Teresa","Ann","Sara","Madison","Frances","Janice","Jean","Alice","Judy","Sophia","Grace","Denise","Amber","Marilyn","Danielle","Brittany","Diana","Abigail","Jane","Lori","Marie","Julia"];
+const MALE = ["James","Michael","Robert","John","David","William","Richard","Joseph","Thomas","Charles","Daniel","Matthew","Anthony","Mark","Steven","Paul","Andrew","Joshua","Kevin","Brian","George","Timothy","Edward","Jason","Ryan","Jacob","Nicholas","Eric","Jonathan","Justin","Scott","Brandon","Benjamin","Samuel","Patrick","Alexander","Jack","Tyler","Aaron","Adam","Nathan","Henry","Kyle","Noah","Ethan","Christian","Sean","Austin","Dylan","Jordan","Gabriel","Logan","Juan","Vincent","Philip","Bradley","Raymond","Roger","Carl","Albert","Wayne","Ralph","Russell","Louis","Bobby","Johnny","Bruce","Alan","Eugene","Randy","Terry","Gerald","Harold","Jesse","Bryan","Billy","Walter","Keith","Douglas","Peter","Jeremy","Gary","Larry","Stephen","Jeffrey","Ronald","Frank","Gregory","Raymond","Victor","Marcus","Oscar","Felix","Hugo","Miles","Colin","Derek","Grant","Ivan","Joel","Leon","Owen","Quinn","Seth","Wade","Blake","Chase","Drake"];
+const FEMALE = ["Mary","Patricia","Jennifer","Linda","Elizabeth","Barbara","Susan","Jessica","Sarah","Karen","Nancy","Lisa","Betty","Margaret","Sandra","Ashley","Kimberly","Emily","Donna","Michelle","Dorothy","Carol","Amanda","Melissa","Deborah","Stephanie","Rebecca","Sharon","Laura","Cynthia","Kathleen","Amy","Angela","Shirley","Anna","Brenda","Pamela","Emma","Nicole","Helen","Samantha","Katherine","Christine","Debra","Rachel","Catherine","Carolyn","Janet","Maria","Heather","Diane","Julie","Joyce","Victoria","Kelly","Christina","Joan","Evelyn","Judith","Olivia","Andrea","Lauren","Kathryn","Megan","Cheryl","Hannah","Jacqueline","Martha","Gloria","Teresa","Ann","Sara","Madison","Frances","Janice","Jean","Alice","Judy","Sophia","Grace","Denise","Amber","Marilyn","Danielle","Brittany","Diana","Abigail","Jane","Lori","Marie","Julia","Claire","Elena","Fiona","Giselle","Hailey","Irene","Jenna","Kara","Lydia","Nora","Paige","Ruby","Stella","Tina","Uma","Vera","Wendy"];
 const LAST = ["Smith","Johnson","Williams","Brown","Jones","Garcia","Miller","Davis","Rodriguez","Martinez","Hernandez","Lopez","Gonzalez","Wilson","Anderson","Thomas","Taylor","Moore","Jackson","Martin","Lee","Perez","Thompson","White","Harris","Sanchez","Clark","Ramirez","Lewis","Robinson","Walker","Young","Allen","King","Wright","Scott","Torres","Nguyen","Hill","Flores","Green","Adams","Nelson","Baker","Hall","Rivera","Campbell","Mitchell","Carter","Roberts","Gomez","Phillips","Evans","Turner","Diaz","Parker","Cruz","Edwards","Collins","Reyes","Stewart","Morris","Morales","Murphy","Cook","Rogers","Gutierrez","Ortiz","Morgan","Cooper","Peterson","Bailey","Reed","Kelly","Howard","Ramos","Kim","Cox","Ward","Richardson","Watson","Brooks","Chavez","Wood","James","Bennett","Gray","Mendoza","Ruiz","Hughes","Price","Alvarez","Castillo","Sanders","Patel","Myers","Long","Ross","Foster","Jimenez"];
 const JOBS = ["Software Engineer","Teacher","Nurse","Accountant","Project Manager","Sales Director","Physician","Architect","Marketing Manager","Electrician","Real Estate Agent","Consultant","Product Designer","Attorney","Pharmacist","Dentist","Chef","Photographer","UX Designer","Data Analyst","Entrepreneur","HR Manager","Logistics Manager","Civil Engineer","Journalist","Financial Advisor","Pilot","Veterinarian"];
 const MODELS = ["Model 3","Model Y","Model S","Model X","Cybertruck","Roadster Performance","Roadster Thrust","Roadster Rocket"];
@@ -109,10 +109,23 @@ function buildDate(i: number): string {
   return `${Math.max(2020, year)}-${pad(month)}-${pad(day)}`;
 }
 
+/**
+ * RandomUser hosts exactly 100 men + 100 women portraits (0–99 each).
+ * We assign each review a unique index so no face repeats across the 200 reviews.
+ */
+function uniqueAvatar(gender: "m" | "f", uniqueIndex: number): string {
+  const folder = gender === "f" ? "women" : "men";
+  // uniqueIndex is 0..99 within that gender
+  return `https://randomuser.me/api/portraits/${folder}/${uniqueIndex}.jpg`;
+}
+
 function buildReviews(): Review[] {
   const out: Review[] = [];
   const usedText = new Set<string>();
-  for (let i = 0; i < 220; i++) {
+  let malePhoto = 0; // 0..99
+  let femalePhoto = 0; // 0..99
+
+  for (let i = 0; i < 200; i++) {
     const gender: "m" | "f" = i % 2 === 0 ? "f" : "m";
     const first = gender === "f" ? FEMALE[i % FEMALE.length]! : MALE[i % MALE.length]!;
     const last = LAST[(i * 7) % LAST.length]!;
@@ -121,17 +134,28 @@ function buildReviews(): Review[] {
     const model = MODELS[i % MODELS.length]!;
     const role = JOBS[i % JOBS.length]!;
     const rating = i % 5 === 0 ? 4 : 5;
+
     let pool = EN;
     if (city === "Paris") pool = FR;
     else if (city === "Madrid") pool = ES;
     else if (city === "Berlin" || city === "Munich") pool = DE;
+
     let text = pool[i % pool.length]!
       .replace(/\{model\}/g, model)
       .replace(/\{city\}/g, city);
     if (pool === EN) text = `${text}${SUFFIX[i % SUFFIX.length]}`.trim();
     if (usedText.has(text)) text = `${text} (${city})`;
     usedText.add(text);
-    const seed = `${i}-${name.replace(/\s/g, "").toLowerCase()}`;
+
+    let photoIndex: number;
+    if (gender === "f") {
+      photoIndex = femalePhoto % 100;
+      femalePhoto += 1;
+    } else {
+      photoIndex = malePhoto % 100;
+      malePhoto += 1;
+    }
+
     out.push({
       id: `r${i + 1}`,
       name,
@@ -144,9 +168,10 @@ function buildReviews(): Review[] {
       date: buildDate(i),
       text,
       model,
-      avatar: `https://i.pravatar.cc/150?u=${encodeURIComponent(seed)}`,
+      avatar: uniqueAvatar(gender, photoIndex),
     });
   }
+
   return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
