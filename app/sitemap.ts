@@ -8,6 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '',
     '/vehicles',
     '/compare',
+    '/reviews',
     '/how-it-works',
     '/about',
     '/contact',
@@ -24,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${base}${path}`,
     lastModified: new Date(),
     changeFrequency: path === '' || path === '/vehicles' ? 'daily' : 'weekly',
-    priority: path === '' ? 1 : path === '/vehicles' ? 0.9 : 0.6,
+    priority: path === '' ? 1 : path === '/vehicles' ? 0.9 : path === '/reviews' ? 0.8 : 0.6,
   }));
 
   let vehicles: { slug: string; updatedAt: Date }[] = [];
