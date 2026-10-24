@@ -16,6 +16,7 @@ const exploreGuest: NavItem[] = [
   { href: '/about', label: 'About us' },
   { href: '/vehicles', label: 'Vehicles' },
   { href: '/compare', label: 'Compare' },
+  { href: '/reviews', label: 'Reviews' },
   { href: '/how-it-works', label: 'How it works' },
   { href: '/faq', label: 'FAQ' },
   { href: '/delivery', label: 'Shipping & tracking' },
@@ -28,6 +29,7 @@ const exploreGuest: NavItem[] = [
 const exploreLoggedIn: NavItem[] = [
   { href: '/vehicles', label: 'Vehicles' },
   { href: '/compare', label: 'Compare' },
+  { href: '/reviews', label: 'Reviews' },
   { href: '/delivery', label: 'Track & ship' },
   { href: '/chat', label: 'Chat' },
   { href: '/account', label: 'Account' },
@@ -127,7 +129,6 @@ export function SiteNav({ session }: { session: SessionInfo }) {
                   ))}
                 </ul>
 
-                {/* Account section only when logged in */}
                 {session && (
                   <>
                     <p className="mt-6 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-400">
